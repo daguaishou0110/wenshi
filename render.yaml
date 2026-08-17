@@ -1,15 +1,13 @@
 services:
   - type: web
     name: canopy-disease
-    runtime: python
+    runtime: docker
     plan: free
     region: singapore
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/config
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.9"
       - key: YOLO_CONF
         value: "0.25"
       - key: EXPLAIN_CONF_THRESHOLD

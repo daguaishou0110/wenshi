@@ -38,26 +38,24 @@ python app.py
 
 ## Deploy on Render
 
-仓库已含 `render.yaml`。任选其一：
+仓库已改为 **Docker** 部署（`Dockerfile` + `render.yaml`），避免 Render 默认 Python 3.13 与 `onnxruntime` 不兼容导致 Build 失败。
 
 ### A. Blueprint（推荐）
 
-1. 打开 [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**
-2. 连接 GitHub 仓库 `daguaishou0110/wenshi`
-3. 确认加载 `render.yaml`，创建服务 `canopy-disease`
-4. 在 Environment 中填入 `OPENCLAW_API_KEY`（可选；不填也能跑检测与环控，只是没有 LLM 建议）
-5. Deploy 完成后访问 `https://<service-name>.onrender.com`
+1. [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**
+2. 连接 `daguaishou0110/wenshi`，确认使用最新 `main`
+3. 创建 `canopy-disease`；可选填 `OPENCLAW_API_KEY`
+4. 访问 `https://<service-name>.onrender.com`
 
-### B. 手动 Web Service
+若已有失败服务：打开该服务 → **Settings** → Runtime 改为 **Docker**，或删掉后用 Blueprint 重建。Manual 时 Start/Build 由 Dockerfile 接管。
+
+### B. 手动 Docker Web Service
 
 | 项 | 值 |
 |----|----|
-| Runtime | Python 3 |
-| Build Command | `pip install -r requirements.txt` |
-| Start Command | `uvicorn app:app --host 0.0.0.0 --port $PORT` |
+| Runtime | Docker |
+| Dockerfile Path | `./Dockerfile` |
 | Health Check Path | `/api/config` |
-
-说明：免费实例闲置会休眠，首次打开可能要等几十秒。若 ONNX 推理内存不足，把 plan 升到 Starter。
 
 ## 与章节素材对应
 

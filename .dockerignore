@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+__pycache__
+*.pyc
+logs/*
+!logs/.gitkeep
+static/uploads/*
+!static/uploads/.gitkeep
+README.md
+render.yaml
+runtime.txt
+.python-version
