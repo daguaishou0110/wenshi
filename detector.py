@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
-import onnxruntime as ort
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+if TYPE_CHECKING:
+    import onnxruntime as ort
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_WEIGHTS = Path(os.getenv("YOLO_WEIGHTS", str(ROOT / "weights" / "best.onnx")))
@@ -40,18 +42,23 @@ DISPLAY_NAMES = {
 }
 
 IMGSZ = 640
-_session: ort.InferenceSession | None = None
+_session: Any | None = None
 _session_path: str | None = None
 
 
-def get_model(weights: str | Path | None = None) -> ort.InferenceSession:
+def get_model(weights: str | Path | None = None) -> Any:
+    """Lazy-load ONNX so the web process can boot on small Render free instances."""
     global _session, _session_path
+    import onnxruntime as ort
+
     path = str(Path(weights) if weights else DEFAULT_WEIGHTS)
     if _session is None or _session_path != path:
         if not Path(path).exists():
             raise FileNotFoundError(f"ONNX weights not found: {path}")
         opts = ort.SessionOptions()
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        opts.intra_op_num_threads = int(os.getenv("ORT_INTRA_THREADS", "1"))
+        opts.inter_op_num_threads = int(os.getenv("ORT_INTER_THREADS", "1"))
         _session = ort.InferenceSession(path, sess_options=opts, providers=["CPUExecutionProvider"])
         _session_path = path
     return _session

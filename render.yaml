@@ -6,7 +6,7 @@ services:
     region: singapore
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /api/config
+    healthCheckPath: /healthz
     envVars:
       - key: YOLO_CONF
         value: "0.25"
@@ -16,5 +16,11 @@ services:
         value: "https://openclaw-api.com/v1"
       - key: OPENCLAW_MODEL
         value: "gpt-5.4-mini"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: ORT_INTRA_THREADS
+        value: "1"
+      - key: ORT_INTER_THREADS
+        value: "1"
       - key: OPENCLAW_API_KEY
         sync: false
