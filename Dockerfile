@@ -13,10 +13,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY . .
-RUN chmod +x start.sh \
-    && mkdir -p logs static/uploads \
-    && test -f weights/best.onnx
+COPY app.py greenhouse.py detector.py ./
+COPY knowledge ./knowledge
+COPY static ./static
+COPY weights ./weights
+RUN mkdir -p logs static/uploads \
+    && test -f weights/best.onnx \
+    && python -c "import fastapi,uvicorn,numpy,PIL; print('imports-ok')"
 
-EXPOSE 10000
-CMD ["./start.sh"]
+# Shell form so $PORT expands; avoid start.sh CRLF issues on Windows commits
+CMD python -m uvicorn app:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1 --log-level info

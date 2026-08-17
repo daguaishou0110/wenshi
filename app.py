@@ -22,7 +22,6 @@ from openai import OpenAI
 from pydantic import BaseModel
 
 import greenhouse
-from detector import DEFAULT_WEIGHTS, list_sample_images, run_detect
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
@@ -39,6 +38,7 @@ API_KEY = os.getenv("OPENCLAW_API_KEY", "")
 DEFAULT_MODEL = os.getenv("OPENCLAW_MODEL", "gpt-5.4-mini")
 CONF_THRESHOLD = float(os.getenv("EXPLAIN_CONF_THRESHOLD", "0.55"))
 DETECT_CONF = float(os.getenv("YOLO_CONF", "0.25"))
+DEFAULT_WEIGHTS = ROOT / "weights" / "best.onnx"
 
 app = FastAPI(title="Canopy Disease Farm")
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL) if API_KEY else None
@@ -149,6 +149,8 @@ def config() -> dict[str, Any]:
 
 @app.get("/api/samples")
 def samples() -> list[dict[str, str]]:
+    from detector import list_sample_images
+
     return list_sample_images(STATIC)
 
 
@@ -221,6 +223,8 @@ async def detect(
 
     t0 = time.time()
     try:
+        from detector import run_detect
+
         detect_out = run_detect(path, conf=conf_v, overlay_dir=STATIC / "samples")
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Detection failed: {exc}") from exc
