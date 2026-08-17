@@ -210,95 +210,207 @@
     .photo-bg {
       position: absolute; inset: 0;
       background:
-        linear-gradient(180deg, rgba(20, 28, 22, 0.18), rgba(18, 24, 18, 0.42)),
-        url("/static/bg-greenhouse.jpg") center / cover no-repeat;
-      transform: scale(1.02);
-      filter: saturate(0.92) contrast(1.02);
+        linear-gradient(180deg, rgba(28, 38, 32, 0.35) 0%, rgba(22, 30, 24, 0.2) 40%, rgba(18, 24, 18, 0.55) 100%),
+        url("/static/bg-greenhouse.jpg") center 40% / cover no-repeat;
+      filter: saturate(0.75) contrast(0.95) blur(1.2px);
+      transform: scale(1.04);
     }
     .photo-veil {
       position: absolute; inset: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 70% 55% at 50% 70%, transparent 20%, rgba(12, 18, 14, 0.45) 100%),
-        linear-gradient(90deg, rgba(12, 16, 12, 0.28), transparent 18%, transparent 82%, rgba(12, 16, 12, 0.28));
+        linear-gradient(180deg, rgba(210, 220, 214, 0.12), transparent 28%),
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(40, 48, 36, 0.55), transparent 70%);
+    }
+    .ground-strip {
+      position: absolute; left: -5%; right: -5%; bottom: 0; height: 22%;
+      z-index: 2; pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent, rgba(62, 74, 52, 0.85) 28%, #3a4632 70%, #2e3728 100%);
+      box-shadow: inset 0 18px 28px rgba(0, 0, 0, 0.18);
     }
 
     .farm-floor {
       position: absolute;
-      left: 3%; right: 3%;
-      bottom: 5%;
-      height: 62%;
+      left: 2.5%; right: 2.5%;
+      bottom: 8%;
+      height: 68%;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1.6%;
+      gap: 2%;
       align-items: end;
       z-index: 3;
+      perspective: 900px;
     }
 
     .house {
       position: relative;
-      height: 94%;
+      height: 100%;
       border: 0; background: transparent; padding: 0; cursor: pointer;
       font: inherit; color: inherit; text-align: left;
-      transition: transform .28s ease, filter .28s ease;
+      transition: transform .28s ease;
     }
-    .house:hover { transform: translateY(-6px); }
+    .house:hover { transform: translateY(-5px); }
     .house.active { transform: translateY(-8px); z-index: 5; }
 
+    /* Side-elevation arched polytunnel (温室大棚) */
     .house-body {
-      position: absolute; inset: 4% 4% 16% 4%;
-      filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35));
+      position: absolute; inset: 2% 0 16% 0;
+      filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.4));
     }
-    .gh-roof {
-      position: absolute; left: 0; right: 0; top: 0; height: 18%;
-      background: linear-gradient(180deg, rgba(232, 238, 236, 0.55), rgba(170, 188, 180, 0.28));
-      clip-path: polygon(0 100%, 8% 12%, 92% 12%, 100% 100%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(2px);
+    .tunnel-depth {
+      position: absolute;
+      left: 4%; right: 2%; top: 14%; bottom: 8%;
+      border-radius: 42% 42% 4px 4px / 100% 100% 4px 4px;
+      background: linear-gradient(180deg, rgba(70, 88, 78, 0.4), rgba(40, 52, 44, 0.5));
+      transform: translate(5px, 4px);
+      z-index: 0;
     }
-    .gh-roof::before {
-      content: "";
-      position: absolute; left: 50%; top: 14%; bottom: 0; width: 1px;
-      background: rgba(70, 90, 85, 0.35);
-      transform: translateX(-50%);
-    }
-    .gh-glass {
-      position: absolute; left: 2%; right: 2%; top: 16%; bottom: 0;
-      border-radius: 2px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(210, 230, 220, 0.08) 28%, rgba(30, 50, 38, 0.22) 100%),
-        url("/static/bg-rows.jpg") center bottom / cover no-repeat;
-      border: 1px solid rgba(210, 220, 214, 0.45);
+    .tunnel-shell {
+      position: absolute; inset: 0 4% 8% 4%;
+      border-radius: 48% 48% 3px 3px / 100% 100% 3px 3px;
       overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-    }
-    .mullions {
-      position: absolute; inset: 0; pointer-events: none; z-index: 2;
+      z-index: 1;
       background:
-        repeating-linear-gradient(90deg, transparent 0 18%, rgba(55, 70, 62, 0.22) 18% 18.7%),
-        repeating-linear-gradient(0deg, transparent 0 28%, rgba(55, 70, 62, 0.16) 28% 28.6%);
+        linear-gradient(180deg,
+          rgba(248, 252, 250, 0.62) 0%,
+          rgba(210, 230, 220, 0.32) 16%,
+          rgba(150, 185, 165, 0.16) 38%,
+          rgba(85, 115, 95, 0.2) 68%,
+          rgba(45, 65, 50, 0.38) 100%),
+        url("/static/bg-rows.jpg") center 70% / 140% auto no-repeat;
+      border: 2px solid rgba(90, 110, 98, 0.78);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.38),
+        inset 0 -28px 40px rgba(20, 35, 25, 0.22);
     }
-    .reflection {
-      position: absolute; inset: 0; pointer-events: none; z-index: 3;
-      background: linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0 12%, transparent 26%);
+    .tunnel-shell::before {
+      content: "";
+      position: absolute; inset: 2px;
+      border-radius: inherit;
+      border: 1.5px solid rgba(65, 85, 72, 0.45);
+      pointer-events: none;
+      z-index: 7;
     }
-    .canopy {
-      display: none;
+    .tunnel-shell::after {
+      /* ridge / peak rail */
+      content: "";
+      position: absolute; left: 8%; right: 8%; top: 1px; height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(55, 72, 62, 0.55), transparent);
+      border-radius: 2px;
+      z-index: 7;
     }
-    .tomato { display: none; }
+    .tunnel-film {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 90% 55% at 50% 0%, rgba(255, 255, 255, 0.5), transparent 60%),
+        linear-gradient(105deg, rgba(255, 255, 255, 0.35) 0 6%, transparent 14%),
+        linear-gradient(180deg, rgba(255,255,255,0.12), transparent 40%);
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .tunnel-ribs {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0 11%,
+          rgba(45, 62, 52, 0.48) 11% 12%,
+          transparent 12% 22%
+        );
+      mask-image: linear-gradient(180deg, #000 0 58%, transparent 100%);
+    }
+    .tunnel-ribs::before {
+      content: "";
+      position: absolute; left: 0; right: 0; top: 0; bottom: 18%;
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      box-shadow:
+        inset 0 0 0 1.5px rgba(50, 68, 58, 0.28),
+        inset 0 18px 0 -16px rgba(50, 68, 58, 0.22),
+        inset 0 36px 0 -34px rgba(50, 68, 58, 0.18);
+    }
+    .tunnel-ribs::after {
+      content: "";
+      position: absolute; left: 3%; right: 3%; top: 42%; height: 1px;
+      background: rgba(50, 68, 58, 0.28);
+      box-shadow: 0 22px 0 rgba(50, 68, 58, 0.22), 0 44px 0 rgba(50, 68, 58, 0.16);
+    }
+    .tunnel-end {
+      position: absolute; right: 0; top: 10%; bottom: 0; width: 18%;
+      z-index: 4;
+      background:
+        linear-gradient(90deg, rgba(40, 55, 45, 0.15), rgba(55, 72, 60, 0.55)),
+        linear-gradient(180deg, rgba(200, 215, 205, 0.25), rgba(60, 78, 68, 0.35));
+      border-left: 1px solid rgba(45, 60, 50, 0.55);
+      box-shadow: inset 4px 0 12px rgba(0, 0, 0, 0.12);
+    }
+    .tunnel-end::before {
+      content: "";
+      position: absolute; left: 0; right: 0; top: 0; height: 100%;
+      background:
+        linear-gradient(180deg, rgba(50, 65, 55, 0.4) 0 2px, transparent 2px),
+        linear-gradient(90deg, transparent 40%, rgba(50, 65, 55, 0.35) 40% 42%, transparent 42%);
+      pointer-events: none;
+    }
+    .tunnel-door {
+      position: absolute; left: 18%; right: 18%; bottom: 0; height: 58%;
+      z-index: 2;
+      background: linear-gradient(180deg, rgba(90, 110, 95, 0.8), rgba(48, 62, 52, 0.95));
+      border: 1px solid rgba(25, 35, 28, 0.55);
+      border-bottom: 0;
+      border-radius: 2px 2px 0 0;
+    }
+    .tunnel-door::before {
+      content: "";
+      position: absolute; left: 50%; top: 0; bottom: 0; width: 1px;
+      background: rgba(20, 28, 22, 0.55);
+    }
+    .tunnel-door::after {
+      content: "";
+      position: absolute; right: 12%; top: 48%; width: 4px; height: 4px;
+      border-radius: 50%;
+      background: rgba(220, 210, 165, 0.75);
+    }
+    .tunnel-crops {
+      position: absolute; left: 0; right: 16%; bottom: 0; height: 34%;
+      z-index: 1; pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 0%, rgba(25, 55, 32, 0.55) 55%),
+        repeating-linear-gradient(90deg, #244a2c 0 9px, #356338 9px 18px);
+      opacity: 0.55;
+      clip-path: polygon(0 35%, 100% 20%, 100% 100%, 0 100%);
+    }
+    .tunnel-base {
+      position: absolute; left: 2%; right: 2%; bottom: 0; height: 9%;
+      z-index: 2;
+      background: linear-gradient(180deg, #a0a69c, #767d74 50%, #5c635a);
+      border-radius: 1px;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28);
+    }
+    .tunnel-base::before {
+      content: "";
+      position: absolute; left: 2%; right: 2%; top: -3px; height: 4px;
+      background: linear-gradient(180deg, #b8beb4, #8f968d);
+    }
+    .tunnel-base::after {
+      content: "";
+      position: absolute; left: 8%; right: 8%; bottom: -5px; height: 5px;
+      background: rgba(25, 32, 24, 0.32);
+      border-radius: 50%;
+      filter: blur(2px);
+    }
 
     .mist {
-      position: absolute; inset: 0; z-index: 4; pointer-events: none;
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
       background:
-        radial-gradient(ellipse at 50% 85%, rgba(245, 250, 248, 0.42), transparent 58%);
+        radial-gradient(ellipse at 50% 78%, rgba(245, 250, 248, 0.5), transparent 58%);
       opacity: 0; transition: opacity .55s ease;
+      border-radius: inherit;
     }
     .house.humid .mist { opacity: 1; animation: mist 3.5s ease-in-out infinite; }
     .house.fx-boost.fx-mist .mist {
       opacity: 1 !important;
       animation: mistBoost 1.1s ease-in-out infinite;
-      background:
-        radial-gradient(ellipse at 40% 78%, rgba(235, 245, 242, 0.55), transparent 55%),
-        radial-gradient(ellipse at 65% 88%, rgba(245, 250, 248, 0.4), transparent 50%);
     }
     @keyframes mist { 50% { opacity: .7; } }
     @keyframes mistBoost {
@@ -307,9 +419,10 @@
     }
 
     .warm {
-      position: absolute; inset: 0; z-index: 4; pointer-events: none;
-      background: linear-gradient(180deg, rgba(255, 180, 90, 0), rgba(255, 140, 60, 0.16));
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 180, 90, 0), rgba(255, 140, 60, 0.18));
       opacity: 0; transition: opacity .5s ease;
+      border-radius: inherit;
     }
     .house.hot .warm { opacity: 1; }
     .house.fx-boost.fx-heat .warm {
@@ -318,10 +431,12 @@
     }
 
     .fan {
-      position: absolute; right: 8%; top: 8%; width: 22px; height: 22px; z-index: 5;
+      position: absolute; left: 50%; top: 12%; width: 14px; height: 14px; z-index: 5;
+      transform: translateX(-50%);
       border-radius: 50%;
-      background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.45), rgba(90, 110, 100, 0.4));
-      border: 1px solid rgba(50, 70, 60, 0.4);
+      background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.55), rgba(70, 88, 78, 0.7));
+      border: 1px solid rgba(35, 48, 40, 0.65);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .fan i {
       position: absolute; inset: 3px; border-radius: 50%;
@@ -341,43 +456,41 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .vents {
-      position: absolute; left: 10%; right: 34%; top: 5%; height: 8%; z-index: 5;
-      display: flex; gap: 3px;
+      position: absolute; left: 12%; right: 22%; top: 6%; height: 12%; z-index: 5;
+      display: flex; gap: 4px; align-items: flex-start;
     }
     .vents b {
-      flex: 1; border-radius: 2px; background: rgba(20, 40, 50, 0.4);
-      transform: scaleY(0.15); transform-origin: top; transition: .55s ease;
+      flex: 1; height: 70%; border-radius: 1px; background: rgba(40, 55, 48, 0.4);
+      transform: scaleY(0.2); transform-origin: top; transition: .55s ease;
+      border: 1px solid rgba(255,255,255,0.12);
     }
     .house.vent-open .vents b {
       transform: scaleY(1);
-      background: linear-gradient(180deg, rgba(125, 211, 252, 0.55), rgba(56, 189, 248, 0.25));
+      background: linear-gradient(180deg, rgba(180, 215, 205, 0.45), rgba(110, 150, 140, 0.25));
     }
     .house.fx-boost.fx-vent .vents b {
-      transform: scaleY(1.35) !important;
-      background: linear-gradient(180deg, rgba(165, 243, 252, 0.9), rgba(34, 211, 238, 0.45)) !important;
-      box-shadow: 0 0 10px rgba(34, 211, 238, 0.55);
+      transform: scaleY(1.15) !important;
       animation: ventFlash 0.9s ease-in-out infinite;
     }
     @keyframes ventFlash {
-      50% { filter: brightness(1.35); }
+      50% { filter: brightness(1.2); }
     }
 
     .q-tag {
-      position: absolute; left: 8%; top: 30%; z-index: 6;
+      position: absolute; left: 50%; top: 28%; transform: translateX(-50%); z-index: 7;
       display: none; padding: 4px 8px; border-radius: 4px;
-      background: rgba(220, 38, 38, 0.92); color: #fff;
-      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em;
-      font-family: var(--mono);
-      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.35);
+      background: rgba(180, 50, 42, 0.92); color: #fff;
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em;
+      white-space: nowrap;
     }
     .house.quarantine .q-tag { display: inline-block; animation: blink 1.2s ease infinite; }
-    .house.quarantine .gh-glass {
-      outline: 2px dashed rgba(248, 113, 113, 0.9); outline-offset: 4px;
+    .house.quarantine .tunnel-shell {
+      outline: 2px dashed rgba(220, 90, 80, 0.9); outline-offset: 3px;
     }
     @keyframes blink { 50% { opacity: .55; } }
 
     .glow {
-      position: absolute; inset: 4% 0 10% 0; border-radius: 16px; z-index: 0; pointer-events: none;
+      position: absolute; inset: 0 2% 12% 2%; border-radius: 42% 42% 8px 8px / 90% 90% 8px 8px; z-index: 0; pointer-events: none;
       opacity: 0; transition: opacity .3s ease;
     }
     .house.risk-critical .glow {
@@ -425,15 +538,15 @@
     }
 
     .hud {
-      position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 8%);
+      position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 4%);
       width: 94%; z-index: 8;
       padding: 8px 9px 9px;
-      border-radius: 10px;
-      background: rgba(255, 252, 248, 0.9);
-      border: 1px solid rgba(70, 92, 72, 0.16);
-      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      background: rgba(252, 250, 246, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(8px);
       color: #243028;
-      box-shadow: 0 10px 22px rgba(40, 55, 30, 0.14);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
     }
     .house.active .hud {
       border-color: rgba(63, 107, 69, 0.4);
@@ -658,6 +771,7 @@
         <div class="world">
           <div class="photo-bg" aria-hidden="true"></div>
           <div class="photo-veil" aria-hidden="true"></div>
+          <div class="ground-strip" aria-hidden="true"></div>
           <div class="conduits" id="conduits"></div>
           <div class="farm-floor" id="houses"></div>
         </div>
@@ -871,16 +985,21 @@
           <div class="glow"></div>
           <div class="delta-chips">${chipsHtml}</div>
           <div class="house-body">
-            <div class="gh-roof"></div>
-            <div class="gh-glass">
-              <div class="mullions"></div>
-              <div class="reflection"></div>
+            <div class="tunnel-depth" aria-hidden="true"></div>
+            <div class="tunnel-shell">
+              <div class="tunnel-ribs"></div>
+              <div class="tunnel-crops"></div>
+              <div class="tunnel-end">
+                <div class="tunnel-door"></div>
+                <div class="fan"><i></i></div>
+              </div>
+              <div class="tunnel-film"></div>
               <div class="mist"></div>
               <div class="warm"></div>
               <div class="vents"><b></b><b></b><b></b><b></b></div>
-              <div class="fan"><i></i></div>
               <div class="q-tag">QUARANTINE</div>
             </div>
+            <div class="tunnel-base"></div>
           </div>
           <div class="hud">
             <div class="hud-top"><span class="id">${h.house_id}</span><span class="risk">${r}</span></div>
