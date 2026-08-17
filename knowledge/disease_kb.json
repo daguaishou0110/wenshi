@@ -1,0 +1,145 @@
+{
+  "Tomato_Yellow_Leaf_Curl_Virus": {
+    "short": "YLCV",
+    "name_en": "Tomato yellow leaf curl virus",
+    "pathogen": "virus",
+    "severity": "high",
+    "visual_cues": ["Upward leaf curling", "Yellowing of leaf margins", "Stunted new growth"],
+    "management": [
+      "Rogue symptomatic plants promptly",
+      "Intensify whitefly / vector monitoring",
+      "Avoid moving tools from affected rows without sanitation"
+    ],
+    "climate_focus": "Climate will not cure virus; keep canopy dry enough for scouting and reduce vector-favourable stagnant air."
+  },
+  "Tomato__Spider_Mites": {
+    "short": "Spider mites",
+    "name_en": "Spider mites",
+    "pathogen": "pest",
+    "severity": "high",
+    "visual_cues": ["Fine stippling on upper leaf", "Bronzing under heavy infestation", "Possible webbing"],
+    "management": [
+      "Confirm with underside leaf inspection",
+      "Consider biological control or approved miticide per local protocol",
+      "Avoid repeated broad-spectrum sprays that remove predators"
+    ],
+    "climate_focus": "Mites favour hot, dry canopies — avoid over-drying; raise RH moderately if crop and disease pressure allow."
+  },
+  "Tomato___Bacterial_spot": {
+    "short": "Bacterial spot",
+    "name_en": "Bacterial spot",
+    "pathogen": "bacterial",
+    "severity": "high",
+    "visual_cues": ["Small water-soaked spots", "Dark centres with yellow halo", "Lesions on leaves and sometimes fruit"],
+    "management": [
+      "Reduce leaf wetness duration",
+      "Prefer drip over overhead irrigation",
+      "Sanitize pruning tools between plants"
+    ],
+    "climate_focus": "Lower RH and increase airflow; stop fogging / overhead wetting."
+  },
+  "Tomato___Early_blight": {
+    "short": "Early blight",
+    "name_en": "Early blight",
+    "pathogen": "fungal",
+    "severity": "medium",
+    "visual_cues": ["Concentric target-like leaf spots", "Older leaves often first", "Yellow halo around lesions"],
+    "management": [
+      "Remove heavily infected lower leaves",
+      "Improve basal airflow",
+      "Follow local fungicide / cultural schedule if pressure rises"
+    ],
+    "climate_focus": "Reduce prolonged high RH; increase venting after irrigation."
+  },
+  "Tomato___Late_blight": {
+    "short": "Late blight",
+    "name_en": "Late blight",
+    "pathogen": "oomycete",
+    "severity": "critical",
+    "visual_cues": ["Irregular water-soaked lesions", "Rapid expansion in cool humid air", "White sporulation possible on underside"],
+    "management": [
+      "Treat as outbreak priority — isolate affected bay if possible",
+      "Remove and bag severely infected tissue",
+      "Escalate to agronomist for protectant programme"
+    ],
+    "climate_focus": "Aggressively lower RH, open vents / fans, halt fogging, avoid leaf wetness."
+  },
+  "Tomato___Leaf_Mold": {
+    "short": "Leaf mold",
+    "name_en": "Leaf mold",
+    "pathogen": "fungal",
+    "severity": "high",
+    "visual_cues": ["Pale spots on upper leaf", "Olive-green mold on underside", "Common in dense humid greenhouses"],
+    "management": [
+      "Thin dense canopy for airflow",
+      "Prioritise dehumidification overnight",
+      "Check condensation on inner roof / gutters"
+    ],
+    "climate_focus": "Primary lever is RH + ventilation; raise heating slightly at night if needed to dry air."
+  },
+  "Tomato___Septoria_leaf_spot": {
+    "short": "Septoria",
+    "name_en": "Septoria leaf spot",
+    "pathogen": "fungal",
+    "severity": "medium",
+    "visual_cues": ["Many small circular spots", "Dark margins with pale centres", "Lower canopy often denser"],
+    "management": [
+      "Remove infected lower leaves",
+      "Keep drip lines from wetting foliage",
+      "Maintain row sanitation"
+    ],
+    "climate_focus": "Moderate RH reduction and continuous gentle airflow."
+  },
+  "Tomato___Target_Spot": {
+    "short": "Target spot",
+    "name_en": "Target spot",
+    "pathogen": "fungal",
+    "severity": "medium",
+    "visual_cues": ["Circular lesions with concentric rings", "May defoliate under high humidity", "Fruit lesions possible in severe cases"],
+    "management": [
+      "Improve canopy aeration",
+      "Avoid prolonged leaf wetness after irrigation",
+      "Scout adjacent rows for early spread"
+    ],
+    "climate_focus": "Vent + fan to shorten wetness; avoid fogger cycles."
+  },
+  "Tomato_mosaic_virus": {
+    "short": "Mosaic virus",
+    "name_en": "Tomato mosaic virus",
+    "pathogen": "virus",
+    "severity": "high",
+    "visual_cues": ["Mosaic mottling", "Leaf distortion", "Uneven greening"],
+    "management": [
+      "Rogue confirmed plants",
+      "Strict hand / tool hygiene",
+      "Do not use climate as a substitute for sanitation"
+    ],
+    "climate_focus": "Keep environment stable for crop; focus on biosecurity rather than setpoint extremes."
+  },
+  "healthy_leaf": {
+    "short": "Healthy",
+    "name_en": "Healthy leaf",
+    "pathogen": "none",
+    "severity": "low",
+    "visual_cues": ["Uniform green lamina", "No active lesion pattern above threshold"],
+    "management": [
+      "Maintain routine scouting",
+      "Keep current climate recipe unless sensors drift",
+      "Do not spray based on a healthy frame alone"
+    ],
+    "climate_focus": "Hold greenhouse setpoints; continue monitoring."
+  },
+  "no_detection": {
+    "short": "No detection",
+    "name_en": "No lesion above threshold",
+    "pathogen": "unknown",
+    "severity": "low",
+    "visual_cues": ["Detector returned empty set"],
+    "management": [
+      "Recapture with better framing / lighting",
+      "Do not change climate from an empty scan",
+      "Continue scheduled scouting"
+    ],
+    "climate_focus": "No automatic climate change."
+  }
+}

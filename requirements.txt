@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn==0.32.1
+python-multipart==0.0.17
+openai==1.57.4
+python-dotenv==1.0.1
+pillow==10.4.0
+numpy==1.26.4
+onnxruntime==1.20.1

@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.Python
+.venv/
+venv/
+logs/*
+!logs/.gitkeep
+static/uploads/*
+!static/uploads/.gitkeep
+.DS_Store
+Thumbs.db
+*.log

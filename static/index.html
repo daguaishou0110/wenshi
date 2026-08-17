@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Canopy Farm Digital Twin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@450;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #061018;
+      --bg1: #0a1820;
+      --panel: rgba(8, 24, 32, 0.78);
+      --panel-edge: rgba(94, 234, 212, 0.22);
+      --cyan: #5eead4;
+      --teal: #2dd4bf;
+      --emerald: #34d399;
+      --ink: #e8f6f2;
+      --muted: #7a9aa0;
+      --warn: #fbbf24;
+      --crit: #f87171;
+      --ok: #34d399;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+      --sans: Manrope, "IBM Plex Sans", system-ui, sans-serif;
+      --radius: 14px;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--bg0);
+      overflow-x: hidden;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background:
+        radial-gradient(1000px 520px at 8% -8%, rgba(45, 212, 191, 0.14), transparent 55%),
+        radial-gradient(900px 480px at 92% 0%, rgba(16, 185, 129, 0.1), transparent 50%),
+        linear-gradient(180deg, #07141c 0%, #061018 45%, #081820 100%);
+    }
+
+    .bracket {
+      position: relative;
+    }
+    .bracket::before,
+    .bracket::after {
+      content: "";
+      position: absolute;
+      width: 14px; height: 14px;
+      border-color: rgba(94, 234, 212, 0.55);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .bracket::before {
+      top: 6px; left: 6px;
+      border-width: 1.5px 0 0 1.5px;
+    }
+    .bracket::after {
+      bottom: 6px; right: 6px;
+      border-width: 0 1.5px 1.5px 0;
+    }
+    .bracket .br-tr,
+    .bracket .br-bl {
+      position: absolute;
+      width: 14px; height: 14px;
+      border-color: rgba(94, 234, 212, 0.55);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .bracket .br-tr {
+      top: 6px; right: 6px;
+      border-width: 1.5px 1.5px 0 0;
+    }
+    .bracket .br-bl {
+      bottom: 6px; left: 6px;
+      border-width: 0 0 1.5px 1.5px;
+    }
+
+    .top {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(94, 234, 212, 0.12);
+      background: rgba(4, 14, 20, 0.72);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: flex; gap: 12px; align-items: center; }
+    .mark {
+      width: 42px; height: 42px; border-radius: 10px;
+      background:
+        linear-gradient(145deg, rgba(45, 212, 191, 0.95), rgba(16, 185, 129, 0.85));
+      color: #04201a;
+      display: grid; place-items: center;
+      font-family: var(--mono); font-weight: 700; font-size: 0.85rem;
+      letter-spacing: -0.04em;
+      box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.35), 0 10px 28px rgba(45, 212, 191, 0.22);
+    }
+    .brand h1 {
+      margin: 0; font-size: 1.12rem; font-weight: 750; letter-spacing: -0.02em;
+      color: #f0fdfa;
+    }
+    .brand p {
+      margin: 2px 0 0; color: var(--muted); font-size: 0.74rem;
+      font-family: var(--mono); letter-spacing: 0.02em;
+    }
+    .status { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      padding: 5px 11px; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 600;
+      font-family: var(--mono);
+      border: 1px solid rgba(94, 234, 212, 0.18);
+      color: #c5e8e0; background: rgba(255, 255, 255, 0.03);
+    }
+    .chip.ok { color: #86efac; border-color: rgba(52, 211, 153, 0.35); background: rgba(16, 185, 129, 0.1); }
+    .chip.warn { color: #fcd34d; border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08); }
+    .chip.crit { color: #fca5a5; border-color: rgba(248, 113, 113, 0.4); background: rgba(220, 38, 38, 0.12); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr) 340px;
+      gap: 12px;
+      padding: 12px;
+      min-height: 0;
+    }
+
+    .side, .rail {
+      background: var(--panel);
+      border: 1px solid var(--panel-edge);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+      min-height: 0; overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+    .side-h, .rail-h {
+      padding: 13px 14px 11px;
+      border-bottom: 1px solid rgba(94, 234, 212, 0.1);
+    }
+    .side-h h2, .rail-h h2 {
+      margin: 0; color: #f0fdfa; font-size: 0.9rem; font-weight: 700;
+    }
+    .side-h p, .rail-h p {
+      margin: 4px 0 0; color: var(--muted); font-size: 0.7rem;
+      font-family: var(--mono);
+    }
+    .side-b, .rail-b { padding: 12px; overflow: auto; flex: 1; }
+
+    .detect-pane {
+      margin-bottom: 12px;
+      border: 1px solid rgba(94, 234, 212, 0.16);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+      z-index: 1;
+      position: relative;
+    }
+    .detect-pane .ph,
+    .detect-pane img {
+      display: block;
+      width: 100%;
+      max-height: 120px;
+      height: 120px;
+      object-fit: contain;
+      background: #041018;
+      overflow: hidden;
+    }
+    .detect-pane .ph {
+      display: grid; place-items: center;
+      color: var(--muted); font-size: 0.72rem;
+      font-family: var(--mono);
+    }
+    .detect-meta {
+      padding: 8px 10px;
+      border-top: 1px solid rgba(94, 234, 212, 0.1);
+      font-size: 0.7rem; color: var(--muted); line-height: 1.45;
+      font-family: var(--mono);
+    }
+    .detect-meta b { color: #e0faf4; font-weight: 600; }
+
+    .sample {
+      width: 100%; text-align: left; cursor: pointer; font: inherit; color: #cfe8e2;
+      border: 1px solid rgba(94, 234, 212, 0.1); background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px; padding: 9px 11px; margin-bottom: 7px;
+      transition: border-color .2s ease, background .2s ease, transform .2s ease;
+    }
+    .sample:hover, .sample.on {
+      border-color: rgba(45, 212, 191, 0.55);
+      background: rgba(45, 212, 191, 0.08);
+      transform: translateY(-1px);
+    }
+    .sample strong { display: block; font-size: 0.8rem; color: #f0fdfa; }
+    .sample span { font-size: 0.66rem; color: var(--muted); font-family: var(--mono); }
+
+    .btn {
+      border: 0; border-radius: 10px; padding: 9px 12px; font: inherit; font-weight: 700;
+      cursor: pointer; transition: .2s ease;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #2dd4bf, #059669);
+      color: #04201a;
+      box-shadow: 0 8px 22px rgba(45, 212, 191, 0.22);
+    }
+    .btn.primary:hover { filter: brightness(1.06); }
+    .btn.primary:disabled,
+    .btn.warn:disabled,
+    .btn.ghost:disabled { opacity: .4; cursor: not-allowed; filter: none; box-shadow: none; }
+    .btn.ghost {
+      background: rgba(255, 255, 255, 0.03); color: #cfe8e2;
+      border: 1px solid rgba(94, 234, 212, 0.16);
+    }
+    .btn.warn {
+      background: linear-gradient(135deg, #f59e0b, #d97706); color: #1a1000;
+      box-shadow: 0 8px 22px rgba(217, 119, 6, 0.22);
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .upload {
+      display: block; margin-top: 8px; padding: 9px; border-radius: 10px;
+      border: 1px dashed rgba(94, 234, 212, 0.28); color: var(--muted); font-size: 0.72rem;
+      background: rgba(0, 0, 0, 0.18); cursor: pointer; font-family: var(--mono);
+    }
+
+    .stage-wrap {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      min-height: calc(100vh - 104px);
+      border: 1px solid rgba(94, 234, 212, 0.16);
+      box-shadow: var(--shadow);
+      background: #07141c;
+    }
+    .stage-wrap::before {
+      content: "";
+      position: absolute; inset: 0; z-index: 6; pointer-events: none;
+      background:
+        linear-gradient(rgba(94, 234, 212, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(94, 234, 212, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .55;
+      mix-blend-mode: screen;
+    }
+    .stage-wrap::after {
+      content: "";
+      position: absolute; inset: 0; z-index: 7; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0 2px,
+        rgba(0, 0, 0, 0.07) 2px 3px
+      );
+      opacity: .45;
+    }
+
+    .world {
+      position: absolute; inset: 0;
+      perspective: 1400px;
+      overflow: hidden;
+    }
+    .sky {
+      position: absolute; inset: 0 0 38% 0;
+      background:
+        radial-gradient(ellipse 48% 38% at 78% 20%, rgba(255, 220, 150, 0.42), transparent 55%),
+        radial-gradient(ellipse 80% 55% at 28% 0%, rgba(56, 189, 248, 0.18), transparent 60%),
+        linear-gradient(180deg, #1a3a4e 0%, #2f5f72 40%, #6a8f7a 100%);
+    }
+    .sun {
+      position: absolute; top: 9%; right: 14%; width: 68px; height: 68px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff8d6, #f0c14b 45%, rgba(240, 193, 75, 0) 70%);
+      animation: sun 8s ease-in-out infinite;
+    }
+    @keyframes sun { 50% { transform: scale(1.05); filter: brightness(1.08); } }
+    .haze {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(180deg, transparent 40%, rgba(120, 180, 160, 0.16) 70%, rgba(20, 40, 35, 0.2));
+    }
+    .terrain {
+      position: absolute; left: -10%; right: -10%; bottom: -8%; height: 52%;
+      transform: rotateX(58deg) translateZ(-40px);
+      transform-origin: center top;
+      background:
+        repeating-linear-gradient(90deg, rgba(94, 234, 212, 0.04) 0 2px, transparent 2px 28px),
+        linear-gradient(180deg, #4f7a58 0%, #3a5e42 45%, #2a4530 100%);
+      box-shadow: inset 0 40px 80px rgba(0, 0, 0, 0.22);
+    }
+
+    .farm-floor {
+      position: absolute;
+      left: 4%; right: 4%;
+      bottom: 7%;
+      height: 58%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.4%;
+      align-items: end;
+      z-index: 3;
+    }
+
+    .house {
+      position: relative;
+      height: 92%;
+      border: 0; background: transparent; padding: 0; cursor: pointer;
+      font: inherit; color: inherit; text-align: left;
+      transform-style: preserve-3d;
+      transition: transform .35s cubic-bezier(.2, .8, .2, 1);
+    }
+    .house:hover { transform: translateY(-10px) scale(1.015); }
+    .house.active { transform: translateY(-14px) scale(1.03); z-index: 5; }
+
+    .house-body {
+      position: absolute; inset: 8% 6% 14% 6%;
+      transform-style: preserve-3d;
+      filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.4));
+    }
+    .gh-roof {
+      position: absolute; left: 0; right: 0; top: -1%; height: 26%;
+      background: linear-gradient(180deg, rgba(190, 230, 245, 0.7), rgba(120, 180, 205, 0.35));
+      clip-path: polygon(2% 100%, 12% 8%, 88% 8%, 98% 100%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: inset 0 -8px 16px rgba(255, 255, 255, 0.12);
+    }
+    .gh-roof::before {
+      content: "";
+      position: absolute; left: 49%; top: 8%; bottom: 0; width: 2px;
+      background: rgba(60, 90, 105, 0.4);
+    }
+    .gh-glass {
+      position: absolute; left: 4%; right: 4%; top: 22%; bottom: 0;
+      border-radius: 3px 3px 8px 8px;
+      background:
+        linear-gradient(180deg, rgba(200, 235, 245, 0.26) 0%, rgba(140, 200, 190, 0.12) 35%, rgba(20, 50, 40, 0.14) 100%);
+      border: 1.5px solid rgba(100, 140, 150, 0.55);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 -30px 40px rgba(10, 30, 25, 0.2);
+    }
+    .mullions {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 15%, rgba(60, 85, 95, 0.3) 15% 16.2%),
+        repeating-linear-gradient(0deg, transparent 0 24%, rgba(60, 85, 95, 0.2) 24% 25%);
+    }
+    .reflection {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(118deg, rgba(255, 255, 255, 0.35) 0 14%, transparent 28% 100%);
+      mix-blend-mode: soft-light;
+    }
+    .canopy {
+      position: absolute; left: 6%; right: 6%; bottom: 4%; height: 52%;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      z-index: 1;
+    }
+    .tomato {
+      width: 20%; height: 72%; position: relative;
+      transform-origin: 50% 100%;
+      animation: sway 4s ease-in-out infinite;
+    }
+    .tomato:nth-child(2) { height: 88%; animation-delay: -.7s; }
+    .tomato:nth-child(3) { height: 68%; animation-delay: -1.5s; }
+    .tomato:nth-child(4) { height: 80%; animation-delay: -2.2s; }
+    .tomato .stem {
+      position: absolute; left: 46%; bottom: 0; width: 8%; height: 100%;
+      background: linear-gradient(180deg, #2f6b38, #1d4826);
+      border-radius: 4px;
+    }
+    .tomato .leaf {
+      position: absolute; width: 70%; height: 34%;
+      background: radial-gradient(ellipse at 30% 40%, #4fa85a, #2b6f36 70%);
+      border-radius: 60% 40% 55% 45%;
+    }
+    .tomato .leaf.l1 { left: -10%; top: 18%; transform: rotate(-24deg); }
+    .tomato .leaf.l2 { right: -8%; top: 28%; transform: rotate(22deg); }
+    .tomato .leaf.l3 { left: 5%; top: 48%; width: 60%; transform: rotate(-10deg); }
+    .tomato .fruit {
+      position: absolute; width: 28%; aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ff8f6b, #d4411f 70%);
+    }
+    .tomato .fruit.f1 { left: 18%; top: 42%; }
+    .tomato .fruit.f2 { right: 14%; top: 56%; width: 22%; }
+    @keyframes sway { 50% { transform: rotate(2deg); } }
+
+    .mist {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 80%, rgba(230, 245, 250, 0.55), transparent 60%),
+        linear-gradient(180deg, transparent, rgba(200, 225, 235, 0.28));
+      opacity: 0; transition: opacity .55s ease;
+    }
+    .house.humid .mist { opacity: 1; animation: mist 3.5s ease-in-out infinite; }
+    .house.fx-boost.fx-mist .mist {
+      opacity: 1 !important;
+      animation: mistBoost 1.1s ease-in-out infinite;
+      background:
+        radial-gradient(ellipse at 40% 75%, rgba(180, 240, 255, 0.85), transparent 55%),
+        radial-gradient(ellipse at 65% 85%, rgba(220, 250, 255, 0.7), transparent 50%),
+        linear-gradient(180deg, transparent, rgba(160, 220, 240, 0.45));
+      filter: blur(0.4px);
+    }
+    @keyframes mist { 50% { opacity: .75; } }
+    @keyframes mistBoost {
+      0%, 100% { opacity: .85; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-4%); }
+    }
+
+    .warm {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 170, 80, 0), rgba(255, 120, 40, 0.2));
+      opacity: 0; transition: opacity .5s ease;
+    }
+    .house.hot .warm { opacity: 1; }
+    .house.fx-boost.fx-heat .warm {
+      opacity: 1 !important;
+      background: linear-gradient(180deg, rgba(255, 140, 40, 0.15), rgba(255, 90, 20, 0.42));
+      animation: heatPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes heatPulse {
+      50% { opacity: .95; filter: brightness(1.15); }
+    }
+
+    .fan {
+      position: absolute; right: 9%; top: 10%; width: 26px; height: 26px; z-index: 4;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.55), rgba(100, 130, 140, 0.35));
+      border: 1px solid rgba(50, 80, 90, 0.45);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+    .fan i {
+      position: absolute; inset: 4px; border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0 18%, #2a4450 0 32%, transparent 0 50%, #2a4450 0 64%, transparent 0);
+      animation: spin 1.1s linear infinite;
+      animation-play-state: paused;
+    }
+    .house.fan-on .fan i { animation-play-state: running; }
+    .house.fan-fast .fan i { animation-duration: .4s; }
+    .house.fx-boost.fx-fan .fan {
+      box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.55), 0 0 16px rgba(45, 212, 191, 0.45);
+    }
+    .house.fx-boost.fx-fan .fan i {
+      animation-play-state: running !important;
+      animation-duration: .18s !important;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .vents {
+      position: absolute; left: 10%; right: 34%; top: 5%; height: 9%; z-index: 4;
+      display: flex; gap: 3px;
+    }
+    .vents b {
+      flex: 1; border-radius: 2px; background: rgba(20, 40, 50, 0.4);
+      transform: scaleY(0.15); transform-origin: top; transition: .55s ease;
+    }
+    .house.vent-open .vents b {
+      transform: scaleY(1);
+      background: linear-gradient(180deg, rgba(125, 211, 252, 0.55), rgba(56, 189, 248, 0.25));
+    }
+    .house.fx-boost.fx-vent .vents b {
+      transform: scaleY(1.35) !important;
+      background: linear-gradient(180deg, rgba(165, 243, 252, 0.9), rgba(34, 211, 238, 0.45)) !important;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.55);
+      animation: ventFlash 0.9s ease-in-out infinite;
+    }
+    @keyframes ventFlash {
+      50% { filter: brightness(1.35); }
+    }
+
+    .q-tag {
+      position: absolute; left: 8%; top: 30%; z-index: 6;
+      display: none; padding: 4px 8px; border-radius: 4px;
+      background: rgba(220, 38, 38, 0.92); color: #fff;
+      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em;
+      font-family: var(--mono);
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.35);
+    }
+    .house.quarantine .q-tag { display: inline-block; animation: blink 1.2s ease infinite; }
+    .house.quarantine .gh-glass {
+      outline: 2px dashed rgba(248, 113, 113, 0.9); outline-offset: 4px;
+    }
+    @keyframes blink { 50% { opacity: .55; } }
+
+    .glow {
+      position: absolute; inset: 4% 0 10% 0; border-radius: 16px; z-index: 0; pointer-events: none;
+      opacity: 0; transition: opacity .3s ease;
+    }
+    .house.risk-critical .glow {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.65), 0 0 36px rgba(220, 38, 38, 0.35);
+      animation: crit 1.5s ease-in-out infinite;
+    }
+    .house.risk-high .glow {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.55), 0 0 28px rgba(234, 88, 12, 0.28);
+    }
+    .house.active .glow {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.55), 0 0 32px rgba(45, 212, 191, 0.25);
+    }
+    .house.fx-boost .glow {
+      opacity: 1 !important;
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.85), 0 0 40px rgba(45, 212, 191, 0.45) !important;
+      animation: fxRing 0.85s ease-in-out infinite;
+    }
+    @keyframes crit { 50% { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.85), 0 0 48px rgba(220, 38, 38, 0.45); } }
+    @keyframes fxRing { 50% { filter: brightness(1.2); } }
+
+    .delta-chips {
+      position: absolute; left: 50%; top: 0; transform: translate(-50%, -8%);
+      z-index: 12; display: flex; flex-direction: column; gap: 4px;
+      align-items: center; pointer-events: none;
+      opacity: 0; transition: opacity .25s ease;
+    }
+    .house.fx-boost .delta-chips { opacity: 1; animation: chipFloat 4.5s ease-out forwards; }
+    .delta-chips span {
+      padding: 3px 8px; border-radius: 4px;
+      background: rgba(4, 20, 24, 0.88);
+      border: 1px solid rgba(94, 234, 212, 0.55);
+      color: #99f6e4;
+      font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    }
+    @keyframes chipFloat {
+      0% { opacity: 0; transform: translate(-50%, 8%); }
+      12% { opacity: 1; transform: translate(-50%, -8%); }
+      75% { opacity: 1; transform: translate(-50%, -18%); }
+      100% { opacity: 0; transform: translate(-50%, -28%); }
+    }
+
+    .hud {
+      position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 8%);
+      width: 94%; z-index: 8;
+      padding: 8px 9px 9px;
+      border-radius: 10px;
+      background: rgba(4, 16, 22, 0.82);
+      border: 1px solid rgba(94, 234, 212, 0.16);
+      backdrop-filter: blur(12px);
+      color: #e8f6f2;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+    }
+    .house.active .hud {
+      border-color: rgba(94, 234, 212, 0.45);
+      background: rgba(6, 28, 34, 0.88);
+    }
+    .house.fx-boost .hud {
+      border-color: rgba(52, 211, 153, 0.75);
+      animation: hudFlash 0.7s ease-in-out 3;
+    }
+    .house.fx-boost .meters .track > i {
+      animation: meterFlash 0.55s ease-in-out 4;
+    }
+    @keyframes hudFlash {
+      50% { box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.7), 0 0 22px rgba(45, 212, 191, 0.35); }
+    }
+    @keyframes meterFlash {
+      50% { filter: brightness(1.6); box-shadow: 0 0 8px rgba(94, 234, 212, 0.7); }
+    }
+    .hud-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+    .hud-top .id {
+      font-weight: 800; font-size: 0.76rem; letter-spacing: -0.02em;
+      font-family: var(--mono);
+    }
+    .hud-top .risk {
+      font-size: 0.6rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.06em;
+      color: #86efac; font-family: var(--mono);
+    }
+    .house.risk-high .hud-top .risk { color: #fdba74; }
+    .house.risk-critical .hud-top .risk { color: #fca5a5; }
+    .hud-name {
+      margin-top: 1px; font-size: 0.6rem; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; margin-top: 7px; }
+    .meter label {
+      display: flex; justify-content: space-between;
+      font-size: 0.56rem; color: var(--muted); margin-bottom: 2px;
+    }
+    .meter label b {
+      color: #e8f6f2; font-family: var(--mono); font-weight: 500;
+    }
+    .track {
+      height: 4px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); overflow: hidden;
+    }
+    .track > i {
+      display: block; height: 100%; width: 0; border-radius: inherit;
+      background: linear-gradient(90deg, #34d399, #10b981);
+      transition: width .7s cubic-bezier(.2, .8, .2, 1);
+    }
+    .track.rh > i { background: linear-gradient(90deg, #67e8f9, #0891b2); }
+    .track.fan > i { background: linear-gradient(90deg, #5eead4, #0d9488); }
+    .track.warn > i { background: linear-gradient(90deg, #fdba74, #ea580c); }
+    .track.crit > i { background: linear-gradient(90deg, #fca5a5, #dc2626); }
+
+    .conduits {
+      position: absolute; left: 7%; right: 7%; top: 63%; height: 8px; z-index: 2; pointer-events: none;
+    }
+    .conduit {
+      position: absolute; top: 0; height: 5px; border-radius: 99px;
+      background: linear-gradient(180deg, #7a909a, #4a5c66);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      overflow: hidden; opacity: .5;
+    }
+    .conduit.on { opacity: 1; }
+    .conduit .pulse {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(94, 234, 212, 0.95), transparent);
+      width: 40%; transform: translateX(-120%); opacity: 0;
+    }
+    .conduit.on .pulse {
+      opacity: 1; animation: pulseMove 1.4s linear infinite;
+    }
+    .conduit.alert .pulse {
+      background: linear-gradient(90deg, transparent, rgba(252, 165, 165, 0.95), transparent);
+    }
+    @keyframes pulseMove { to { transform: translateX(320%); } }
+
+    .overlay-ui {
+      position: absolute; inset: 0; z-index: 10; pointer-events: none;
+    }
+    .legend-card, .toast { pointer-events: auto; }
+    .legend-card {
+      position: absolute; left: 14px; top: 14px;
+      width: 200px; padding: 11px 13px;
+      border-radius: 10px;
+      background: rgba(4, 16, 22, 0.82);
+      border: 1px solid rgba(94, 234, 212, 0.18);
+      backdrop-filter: blur(14px);
+      color: #b8d9d2; font-size: 0.68rem; line-height: 1.45;
+    }
+    .legend-card strong {
+      display: block; color: #f0fdfa; margin-bottom: 4px; font-size: 0.74rem;
+      font-family: var(--mono); letter-spacing: 0.04em;
+    }
+    .dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px;
+    }
+    .dot.g { background: #34d399; }
+    .dot.o { background: #fb923c; }
+    .dot.r { background: #f87171; }
+    .dot.c { background: #5eead4; }
+
+    .toast {
+      position: absolute; right: 14px; top: 14px; max-width: 280px;
+      padding: 9px 13px; border-radius: 10px;
+      background: rgba(4, 16, 22, 0.9); color: #eef7f1;
+      font-size: 0.74rem; font-weight: 600;
+      border: 1px solid rgba(94, 234, 212, 0.22);
+      opacity: 0; transform: translateY(-8px); transition: .35s ease;
+      font-family: var(--mono);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .plan {
+      border-radius: 12px; padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(94, 234, 212, 0.12);
+      color: #cfe8e2;
+    }
+    .plan.critical { border-color: rgba(248, 113, 113, 0.35); background: rgba(220, 38, 38, 0.08); }
+    .plan.high { border-color: rgba(251, 146, 60, 0.35); background: rgba(234, 88, 12, 0.08); }
+    .plan h3 { margin: 0 0 4px; color: #f0fdfa; font-size: 0.86rem; }
+    .hint { color: var(--muted); font-size: 0.7rem; }
+    .hp {
+      margin-top: 8px; padding: 9px; border-radius: 10px;
+      background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(94, 234, 212, 0.1);
+    }
+    .hp.primary { border-color: rgba(52, 211, 153, 0.4); }
+    .hp.neighbour { border-color: rgba(251, 146, 60, 0.35); }
+    .tag {
+      display: inline-block; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em;
+      padding: 2px 7px; border-radius: 4px; margin-bottom: 4px;
+      font-family: var(--mono);
+    }
+    .tag.primary { background: rgba(52, 211, 153, 0.15); color: #6ee7b7; }
+    .tag.neighbour { background: rgba(251, 146, 60, 0.15); color: #fdba74; }
+    .act {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 0.7rem; padding: 5px 0;
+      border-bottom: 1px dashed rgba(94, 234, 212, 0.08);
+    }
+    .act:last-child { border-bottom: 0; }
+    .act b { font-family: var(--mono); font-weight: 500; color: #eef7f1; }
+
+    .advice {
+      margin-top: 10px; white-space: pre-wrap; line-height: 1.5;
+      font-size: 0.78rem; color: #cfe8e2;
+      border-left: 3px solid #2dd4bf; padding-left: 10px; min-height: 3.2em;
+    }
+    .advice.loading {
+      display: flex; align-items: flex-start; gap: 10px;
+      border-left-color: #5eead4;
+    }
+    .spinner {
+      width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; margin-top: 2px;
+      border: 2px solid rgba(94, 234, 212, 0.2);
+      border-top-color: #5eead4;
+      animation: spin 0.7s linear infinite;
+    }
+    .advice .latency {
+      display: inline-block; margin-top: 8px; padding: 3px 8px; border-radius: 4px;
+      background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(94, 234, 212, 0.25);
+      font-family: var(--mono); font-size: 0.68rem; color: #99f6e4;
+    }
+    .audit {
+      margin-top: 10px; font-size: 0.66rem; color: var(--muted);
+      max-height: 64px; overflow: auto; font-family: var(--mono);
+    }
+
+    @media (max-width: 1100px) {
+      .main { grid-template-columns: 1fr; }
+      .stage-wrap { min-height: 520px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="mark">CF</div>
+        <div>
+          <h1>Canopy Farm Digital Twin</h1>
+          <p>OPS · 温室群数字孪生 · 叶病检测驱动联动环控</p>
+        </div>
+      </div>
+      <div class="status">
+        <span class="chip" id="activeChip">当前棚 —</span>
+        <span class="chip" id="riskChip">农场风险 —</span>
+        <span class="chip" id="yoloChip">检测…</span>
+        <span class="chip" id="apiChip">建议…</span>
+      </div>
+    </header>
+
+    <div class="main">
+      <aside class="side bracket">
+        <span class="br-tr"></span><span class="br-bl"></span>
+        <div class="side-h">
+          <h2>叶面采集</h2>
+          <p>先点场景中的大棚，再扫描</p>
+        </div>
+        <div class="side-b">
+          <div class="detect-pane">
+            <div id="thumb" class="ph">检测预览</div>
+            <div class="detect-meta">
+              棚 <b id="mHouse">—</b><br />
+              目标 <b id="mCount">—</b> · <b id="mLat">—</b><br />
+              <b id="mClasses">等待扫描</b>
+            </div>
+          </div>
+          <div id="samples"></div>
+          <label class="upload">上传叶面图像<input id="file" type="file" accept="image/*" hidden /></label>
+          <div class="row">
+            <button class="btn primary" id="btnDetect" disabled>扫描当前棚</button>
+            <button class="btn ghost" id="btnTick">气候微变</button>
+            <button class="btn ghost" id="btnReset">重置孪生</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="stage-wrap bracket">
+        <span class="br-tr"></span><span class="br-bl"></span>
+        <div class="world">
+          <div class="sky"><div class="sun"></div></div>
+          <div class="haze"></div>
+          <div class="terrain"></div>
+          <div class="conduits" id="conduits"></div>
+          <div class="farm-floor" id="houses"></div>
+        </div>
+        <div class="overlay-ui">
+          <div class="legend-card">
+            <strong>SCENE LEGEND</strong>
+            <div><span class="dot g"></span>正常运行</div>
+            <div><span class="dot o"></span>偏高风险</div>
+            <div><span class="dot r"></span>危急 / 隔离</div>
+            <div><span class="dot c"></span>管道脉冲 = 邻棚联动</div>
+          </div>
+          <div class="toast" id="toast"></div>
+        </div>
+      </section>
+
+      <aside class="rail bracket">
+        <span class="br-tr"></span><span class="br-bl"></span>
+        <div class="rail-h">
+          <h2>联动环控台</h2>
+          <p>主棚执行 · 邻棚屏障 · soft-PLC</p>
+        </div>
+        <div class="rail-b">
+          <div class="plan" id="planBox">
+            <h3 id="planTitle">等待叶面扫描</h3>
+            <p class="hint" id="planHint">扫描后，主棚与邻棚会在场景中点亮联动。</p>
+            <div id="housePlans"></div>
+            <ul id="planNotes" style="margin:8px 0 0;padding-left:16px;color:#7a9aa0;font-size:0.7rem"></ul>
+          </div>
+          <div class="row">
+            <button class="btn warn" id="btnApply" disabled>应用联动计划</button>
+            <button class="btn primary" id="btnExplain" disabled>生成农事建议</button>
+          </div>
+          <div class="advice" id="advice"><span class="hint">建议将结合主棚检测与邻棚联动状态。</span></div>
+          <div class="audit" id="audit"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let selected = null, activeHouse = "H2", lastPlanId = null, apiReady = false, farm = null;
+    let fxMap = {};
+    let fxTimer = null;
+    let explainTimer = null;
+
+    function toast(msg) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2800);
+    }
+
+    function shortName(name) {
+      return String(name || "").replace(/^House\s*\d+\s*[—-]\s*/i, "");
+    }
+
+    function setThumb(src) {
+      const pane = document.querySelector(".detect-pane");
+      const old = $("thumb");
+      if (!old || !pane) return;
+      if (src) {
+        const img = document.createElement("img");
+        img.id = "thumb";
+        img.src = src;
+        img.alt = "";
+        old.replaceWith(img);
+      } else {
+        const ph = document.createElement("div");
+        ph.id = "thumb";
+        ph.className = "ph";
+        ph.textContent = "检测预览";
+        old.replaceWith(ph);
+      }
+    }
+
+    function renderConduits(f, linked) {
+      const layer = $("conduits");
+      layer.innerHTML = "";
+      const n = (f.houses || []).length || 4;
+      (f.links || []).forEach((lk) => {
+        const a = Number(String(lk.from).replace("H", "")) - 1;
+        const b = Number(String(lk.to).replace("H", "")) - 1;
+        const left = ((Math.min(a, b) + 0.5) / n) * 100;
+        const width = (Math.abs(b - a) / n) * 100;
+        const on = linked.has(lk.from) && linked.has(lk.to);
+        const div = document.createElement("div");
+        div.className = "conduit" + (on ? " on" : "") + (on && (f.farm_risk === "critical" || f.farm_risk === "high") ? " alert" : "");
+        div.style.left = left + "%";
+        div.style.width = Math.max(width, 8) + "%";
+        div.innerHTML = '<div class="pulse"></div>';
+        layer.appendChild(div);
+      });
+    }
+
+    function buildDeltas(applied) {
+      const map = {};
+      (applied || []).forEach((row) => {
+        const before = row.before || {};
+        const after = row.after || {};
+        const chips = [];
+        const fx = [];
+        const keys = [
+          { k: "rh_pct", label: "RH", unit: "", round: 0 },
+          { k: "temp_c", label: "T", unit: "°", round: 1 },
+          { k: "vent_pct", label: "VENT", unit: "", round: 0 },
+          { k: "fan_pct", label: "FAN", unit: "", round: 0 },
+          { k: "heating_set_c", label: "HEAT", unit: "°", round: 1 },
+        ];
+        keys.forEach(({ k, label, unit, round }) => {
+          if (before[k] == null || after[k] == null) return;
+          const b = +before[k], a = +after[k];
+          if (Math.abs(a - b) < 0.05) return;
+          const bStr = round === 0 ? Math.round(b) : b.toFixed(round);
+          const aStr = round === 0 ? Math.round(a) : a.toFixed(round);
+          const d = a - b;
+          const dStr = (d >= 0 ? "+" : "") + (round === 0 ? Math.round(d) : d.toFixed(round));
+          if (k === "vent_pct" || k === "fan_pct") {
+            chips.push(label + " " + dStr);
+          } else {
+            chips.push(label + " " + bStr + "→" + aStr + unit);
+          }
+          if (k === "rh_pct") fx.push("fx-mist");
+          if (k === "vent_pct") fx.push("fx-vent");
+          if (k === "fan_pct") fx.push("fx-fan");
+          if (k === "temp_c" || k === "heating_set_c") fx.push("fx-heat");
+        });
+        if (!!before.fogger_on !== !!after.fogger_on) {
+          chips.push("FOG " + (after.fogger_on ? "ON" : "OFF"));
+          fx.push("fx-mist");
+        }
+        if (!!before.quarantine !== !!after.quarantine && after.quarantine) {
+          chips.push("QUARANTINE");
+        }
+        if (chips.length) {
+          map[row.house_id] = { chips, fx: [...new Set(fx)] };
+        }
+      });
+      return map;
+    }
+
+    function applyFx(deltas) {
+      fxMap = deltas || {};
+      clearTimeout(fxTimer);
+      if (!Object.keys(fxMap).length) return;
+      document.querySelectorAll(".house").forEach((el) => {
+        const id = el.dataset.houseId;
+        const d = fxMap[id];
+        if (!d) return;
+        el.classList.add("fx-boost", ...(d.fx || []));
+        const box = el.querySelector(".delta-chips");
+        if (box) {
+          box.innerHTML = (d.chips || []).map((c) => "<span>" + c + "</span>").join("");
+        }
+      });
+      fxTimer = setTimeout(() => {
+        fxMap = {};
+        if (farm) {
+          const linked = (farm.last_linked_plan?.house_plans || []).map((h) => h.house_id);
+          renderFarm(farm, { linkedHouses: linked });
+        }
+      }, 4500);
+    }
+
+    function houseClasses(h, linked) {
+      const rh = +h.rh_pct || 0, fan = +h.fan_pct || 0, vent = +h.vent_pct || 0, temp = +h.temp_c || 0;
+      const r = h.last_risk || "low";
+      const fx = fxMap[h.house_id];
+      const boost = !!fx;
+      const cls = [
+        "house",
+        h.house_id === activeHouse ? "active" : "",
+        h.quarantine ? "quarantine" : "",
+        r === "critical" ? "risk-critical" : r === "high" ? "risk-high" : "",
+        rh >= 80 || h.fogger_on || (boost && fx.fx?.includes("fx-mist")) ? "humid" : "",
+        temp >= 25.5 || (boost && fx.fx?.includes("fx-heat")) ? "hot" : "",
+        fan >= 35 || (boost && fx.fx?.includes("fx-fan")) ? "fan-on" : "",
+        fan >= 60 || (boost && fx.fx?.includes("fx-fan")) ? "fan-fast" : "",
+        vent >= 40 || (boost && fx.fx?.includes("fx-vent")) ? "vent-open" : "",
+        boost ? "fx-boost" : "",
+        ...(boost ? (fx.fx || []) : []),
+      ];
+      return cls.filter(Boolean).join(" ");
+    }
+
+    function renderFarm(f, opts = {}) {
+      farm = f;
+      activeHouse = f.active_house_id;
+      $("activeChip").textContent = "当前棚 " + activeHouse;
+      const risk = f.farm_risk || "low";
+      $("riskChip").textContent = "农场风险 " + risk;
+      $("riskChip").className = "chip" + (risk === "critical" ? " crit" : risk === "high" || risk === "medium" ? " warn" : " ok");
+
+      const linked = new Set((opts.linkedHouses || f.last_linked_plan?.house_plans || []).map((h) => h.house_id || h));
+      renderConduits(f, linked);
+
+      const root = $("houses");
+      root.innerHTML = "";
+      (f.houses || []).forEach((h) => {
+        const rh = +h.rh_pct || 0, fan = +h.fan_pct || 0, vent = +h.vent_pct || 0, temp = +h.temp_c || 0;
+        const r = h.last_risk || "low";
+        const rhTone = rh >= 85 ? "crit" : rh >= 80 ? "warn" : "";
+        const fx = fxMap[h.house_id];
+        const chipsHtml = (fx?.chips || []).map((c) => "<span>" + c + "</span>").join("");
+
+        const btn = document.createElement("button");
+        btn.className = houseClasses(h, linked);
+        btn.dataset.houseId = h.house_id;
+        btn.innerHTML = `
+          <div class="glow"></div>
+          <div class="delta-chips">${chipsHtml}</div>
+          <div class="house-body">
+            <div class="gh-roof"></div>
+            <div class="gh-glass">
+              <div class="mullions"></div>
+              <div class="reflection"></div>
+              <div class="mist"></div>
+              <div class="warm"></div>
+              <div class="vents"><b></b><b></b><b></b><b></b></div>
+              <div class="fan"><i></i></div>
+              <div class="canopy">
+                <div class="tomato"><div class="stem"></div><div class="leaf l1"></div><div class="leaf l2"></div><div class="leaf l3"></div><div class="fruit f1"></div><div class="fruit f2"></div></div>
+                <div class="tomato"><div class="stem"></div><div class="leaf l1"></div><div class="leaf l2"></div><div class="leaf l3"></div><div class="fruit f1"></div><div class="fruit f2"></div></div>
+                <div class="tomato"><div class="stem"></div><div class="leaf l1"></div><div class="leaf l2"></div><div class="leaf l3"></div><div class="fruit f1"></div><div class="fruit f2"></div></div>
+                <div class="tomato"><div class="stem"></div><div class="leaf l1"></div><div class="leaf l2"></div><div class="leaf l3"></div><div class="fruit f1"></div><div class="fruit f2"></div></div>
+              </div>
+              <div class="q-tag">QUARANTINE</div>
+            </div>
+          </div>
+          <div class="hud">
+            <div class="hud-top"><span class="id">${h.house_id}</span><span class="risk">${r}</span></div>
+            <div class="hud-name">${shortName(h.name)}</div>
+            <div class="meters">
+              <div class="meter"><label>Temp <b>${temp.toFixed(1)}°</b></label><div class="track"><i style="width:${Math.min(100, (temp - 16) / (32 - 16) * 100)}%"></i></div></div>
+              <div class="meter"><label>RH <b>${rh.toFixed(0)}%</b></label><div class="track rh ${rhTone}"><i style="width:${Math.min(100, rh)}%"></i></div></div>
+              <div class="meter"><label>Vent <b>${vent.toFixed(0)}%</b></label><div class="track"><i style="width:${Math.min(100, vent)}%"></i></div></div>
+              <div class="meter"><label>Fan <b>${fan.toFixed(0)}%</b></label><div class="track fan"><i style="width:${Math.min(100, fan)}%"></i></div></div>
+            </div>
+          </div>`;
+        btn.onclick = async () => {
+          const res = await fetch("/api/farm/active", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ house_id: h.house_id }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            renderFarm(data.farm, { linkedHouses: [...linked] });
+            toast("已切换到 " + h.house_id + " · " + shortName(h.name));
+          }
+        };
+        root.appendChild(btn);
+      });
+
+      $("audit").innerHTML = (f.audit || []).slice(0, 5).map((a) =>
+        `<div>${a.plan_id || a.id} · ${(a.applied || []).map((x) => x.house_id).join(" → ") || "—"}</div>`
+      ).join("") || "暂无执行记录";
+    }
+
+    function renderPlan(plan) {
+      const box = $("planBox");
+      box.className = "plan " + (plan?.risk || "");
+      $("planTitle").textContent = plan?.title || "无计划";
+      $("planHint").textContent = plan?.requires_confirm
+        ? `风险 ${plan.risk} · 主棚 ${plan.primary_house_id} · 场景联动已点亮`
+        : "无需多棚改动";
+      lastPlanId = plan?.plan_id || null;
+      $("btnApply").disabled = !(plan?.house_plans || []).some((hp) => (hp.actions || []).length || hp.quarantine);
+      const root = $("housePlans");
+      root.innerHTML = "";
+      (plan?.house_plans || []).forEach((hp) => {
+        const div = document.createElement("div");
+        div.className = "hp " + (hp.role || "");
+        div.innerHTML = `
+          <span class="tag ${hp.role}">${hp.role === "primary" ? "主棚" : "邻棚"}</span>
+          <div style="font-weight:700;font-size:0.8rem;color:#f0fdfa">${hp.house_id} · ${shortName(hp.name)}</div>
+          <div class="hint">${hp.title || ""}${hp.quarantine ? " · 隔离" : ""}</div>
+          ${(hp.actions || []).map((a) => `<div class="act"><span>${a.label}</span><b>${a.from} → ${a.to}${a.unit === "bool" || a.unit === "mode" ? "" : a.unit}</b></div>`).join("") || `<div class="hint" style="margin-top:4px">维持设定</div>`}`;
+        root.appendChild(div);
+      });
+      $("planNotes").innerHTML = (plan?.notes || []).map((n) => `<li>${n}</li>`).join("");
+      if (farm && plan?.house_plans) {
+        renderFarm(farm, { linkedHouses: plan.house_plans.map((h) => h.house_id) });
+      }
+    }
+
+    async function loadConfig() {
+      const cfg = await fetch("/api/config").then((r) => r.json());
+      apiReady = !!cfg.api_ready;
+      $("yoloChip").textContent = cfg.yolo_ready ? "检测就绪" : "缺权重";
+      $("yoloChip").className = "chip " + (cfg.yolo_ready ? "ok" : "crit");
+      $("apiChip").textContent = apiReady ? "建议就绪" : "建议离线";
+      $("apiChip").className = "chip " + (apiReady ? "ok" : "warn");
+      $("btnExplain").disabled = !apiReady;
+    }
+
+    async function loadFarm() {
+      renderFarm(await fetch("/api/farm").then((r) => r.json()));
+    }
+
+    async function loadSamples() {
+      const list = await fetch("/api/samples").then((r) => r.json());
+      const root = $("samples");
+      root.innerHTML = "";
+      list.forEach((s, i) => {
+        const b = document.createElement("button");
+        b.className = "sample" + (i === 0 ? " on" : "");
+        b.innerHTML = `<strong>${s.name}</strong><span>${s.file}</span>`;
+        b.onclick = () => {
+          selected = { type: "sample", file: s.file };
+          [...root.children].forEach((c) => c.classList.remove("on"));
+          b.classList.add("on");
+          $("btnDetect").disabled = false;
+          setThumb("/static/" + s.file);
+        };
+        root.appendChild(b);
+        if (i === 0) {
+          selected = { type: "sample", file: s.file };
+          $("btnDetect").disabled = false;
+          setThumb("/static/" + s.file);
+        }
+      });
+    }
+
+    async function runDetect() {
+      if (!selected) return;
+      $("btnDetect").disabled = true;
+      toast("正在扫描 " + activeHouse + " …");
+      const fd = new FormData();
+      fd.append("house_id", activeHouse);
+      if (selected.type === "sample") fd.append("sample_file", selected.file);
+      else fd.append("file", selected.file);
+      const res = await fetch("/api/detect", { method: "POST", body: fd });
+      $("btnDetect").disabled = false;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        $("advice").textContent = err.detail || "检测失败";
+        return;
+      }
+      const data = await res.json();
+      const ev = data.evidence || {};
+      setThumb("/static/" + data.overlay_image);
+      $("mHouse").textContent = data.house_id || activeHouse;
+      $("mCount").textContent = String(ev.n_detections ?? "—");
+      $("mLat").textContent = (data.latency_ms ?? "—") + " ms";
+      $("mClasses").textContent = Object.entries(ev.class_counts || {}).map(([k, v]) => `${k}×${v}`).join(", ") || "—";
+      if (data.farm) farm = data.farm;
+      renderPlan(data.control_plan);
+      $("btnExplain").disabled = !apiReady;
+      toast(`扫描完成 · 联动 ${(data.control_plan?.house_plans || []).length} 棚`);
+      $("advice").innerHTML = `<span class="hint">联动计划已生成，请观察棚体雾气、风机与管道脉冲。</span>`;
+    }
+
+    $("btnDetect").onclick = runDetect;
+
+    $("btnApply").onclick = async () => {
+      toast("下发多棚 soft-PLC …");
+      const res = await fetch("/api/control/apply", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan_id: lastPlanId, operator: "demo" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        $("advice").textContent = data.detail || "应用失败";
+        return;
+      }
+      const applied = data.audit?.applied || [];
+      const linked = applied.map((x) => x.house_id);
+      const deltas = buildDeltas(applied);
+      if (data.farm) {
+        renderFarm(data.farm, { linkedHouses: linked });
+        applyFx(deltas);
+      }
+      $("btnApply").disabled = true;
+      toast("联动已应用 · 观察场景变化");
+      $("advice").textContent = "联动气候计划已下发。场景中的湿度雾气、风机转速与天窗开口会随之变化。";
+    };
+
+    $("btnExplain").onclick = async () => {
+      $("btnExplain").disabled = true;
+      const advice = $("advice");
+      const t0 = Date.now();
+      advice.className = "advice loading";
+      advice.innerHTML = `<div class="spinner"></div><div><div>Calling advisory API…</div><div class="hint" id="explainElapsed">已等待 0s</div></div>`;
+      clearInterval(explainTimer);
+      explainTimer = setInterval(() => {
+        const el = $("explainElapsed");
+        if (el) el.textContent = "已等待 " + Math.floor((Date.now() - t0) / 1000) + "s";
+      }, 250);
+      try {
+        const res = await fetch("/api/explain", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}),
+        });
+        const data = await res.json();
+        clearInterval(explainTimer);
+        advice.className = "advice";
+        if (res.ok) {
+          const lat = data.latency_ms != null ? data.latency_ms : (Date.now() - t0);
+          advice.innerHTML = `${data.explanation || ""}<div class="latency">latency_ms: ${lat}</div>`;
+        } else {
+          advice.textContent = data.detail || "失败";
+        }
+      } catch (err) {
+        clearInterval(explainTimer);
+        advice.className = "advice";
+        advice.textContent = "建议请求失败";
+      }
+      $("btnExplain").disabled = !apiReady;
+    };
+
+    $("btnReset").onclick = async () => {
+      fxMap = {};
+      clearTimeout(fxTimer);
+      const data = await fetch("/api/farm/reset", { method: "POST" }).then((r) => r.json());
+      renderFarm(data.farm);
+      renderPlan(null);
+      $("planTitle").textContent = "孪生已重置";
+      $("housePlans").innerHTML = "";
+      $("btnApply").disabled = true;
+      toast("农场状态已重置");
+    };
+
+    $("btnTick").onclick = async () => {
+      const data = await fetch("/api/farm/tick", { method: "POST" }).then((r) => r.json());
+      const linked = (farm?.last_linked_plan?.house_plans || []).map((h) => h.house_id);
+      renderFarm(data.farm, { linkedHouses: linked });
+    };
+
+    $("file").onchange = (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      selected = { type: "file", file: f };
+      $("btnDetect").disabled = false;
+      setThumb(URL.createObjectURL(f));
+      [...$("samples").children].forEach((c) => c.classList.remove("on"));
+    };
+    document.querySelector(".upload").addEventListener("click", () => $("file").click());
+
+    (async () => {
+      await loadConfig();
+      await loadFarm();
+      await loadSamples();
+      setInterval(async () => {
+        try {
+          const data = await fetch("/api/farm/tick", { method: "POST" }).then((r) => r.json());
+          const linked = (farm?.last_linked_plan?.house_plans || []).map((h) => h.house_id);
+          if (data.farm) renderFarm(data.farm, { linkedHouses: linked });
+        } catch (_) {}
+      }, 9000);
+    })();
+  </script>
+</body>
+</html>
