@@ -1125,7 +1125,7 @@
       const advice = $("advice");
       const t0 = Date.now();
       advice.className = "advice loading";
-      advice.innerHTML = `<div class="spinner"></div><div><div>Calling advisory API…</div><div class="hint" id="explainElapsed">已等待 0s</div></div>`;
+      advice.innerHTML = `<div class="spinner"></div><div><div>Calling advisory API...</div><div class="hint" id="explainElapsed">Elapsed 0s</div></div>`;
       clearInterval(explainTimer);
       explainTimer = setInterval(() => {
         const el = $("explainElapsed");
