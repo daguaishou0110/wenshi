@@ -1017,9 +1017,10 @@
       apiReady = !!cfg.api_ready;
       $("yoloChip").textContent = cfg.yolo_ready ? "检测就绪" : "缺权重";
       $("yoloChip").className = "chip " + (cfg.yolo_ready ? "ok" : "crit");
-      $("apiChip").textContent = apiReady ? "建议就绪" : "建议离线";
+      $("apiChip").textContent = apiReady ? "LLM建议就绪" : "规则建议就绪";
       $("apiChip").className = "chip " + (apiReady ? "ok" : "warn");
-      $("btnExplain").disabled = !apiReady;
+      // Advice always available after a scan (LLM or rule fallback).
+      $("btnExplain").disabled = true;
     }
 
     async function loadFarm() {
@@ -1089,9 +1090,9 @@
       $("mClasses").textContent = Object.entries(ev.class_counts || {}).map(([k, v]) => `${k}×${v}`).join(", ") || "—";
       if (data.farm) farm = data.farm;
       renderPlan(data.control_plan);
-      $("btnExplain").disabled = !apiReady;
+      $("btnExplain").disabled = false;
       toast(`扫描完成 · 联动 ${(data.control_plan?.house_plans || []).length} 棚`);
-      $("advice").innerHTML = `<span class="hint">联动计划已生成，请观察棚体雾气、风机与管道脉冲。</span>`;
+      $("advice").innerHTML = `<span class="hint">联动计划已生成。可点击农事建议（LLM 不可用时自动用规则建议）。</span>`;
     }
 
     $("btnDetect").onclick = runDetect;
@@ -1139,7 +1140,8 @@
         advice.className = "advice";
         if (res.ok) {
           const lat = data.latency_ms != null ? data.latency_ms : (Date.now() - t0);
-          advice.innerHTML = `${data.explanation || ""}<div class="latency">latency_ms: ${lat}</div>`;
+          const src = data.source === "llm" ? "LLM" : "规则兜底";
+          advice.innerHTML = `${data.explanation || ""}<div class="latency">${src} · latency_ms: ${lat}</div>`;
         } else {
           advice.textContent = data.detail || "失败";
         }
@@ -1180,9 +1182,19 @@
     document.querySelector(".upload").addEventListener("click", () => $("file").click());
 
     (async () => {
-      await loadConfig();
-      await loadFarm();
+      // Samples first so the left list never depends on farm/config cold-start.
+      paintSamples(FALLBACK_SAMPLES);
       await loadSamples();
+      for (let i = 0; i < 4; i++) {
+        try {
+          await loadConfig();
+          await loadFarm();
+          break;
+        } catch (err) {
+          console.warn("boot retry", i, err);
+          await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+        }
+      }
       setInterval(async () => {
         try {
           const data = await fetch("/api/farm/tick", { method: "POST" }).then((r) => r.json());

@@ -267,13 +267,54 @@ def control_apply(req: ApplyRequest) -> dict[str, Any]:
     return result
 
 
+def _rule_advisory(evidence: dict[str, Any]) -> str:
+    """Offline advisory when LLM is unavailable or out of credit."""
+    house = evidence.get("house_id") or "the scanned house"
+    top = evidence.get("top") or []
+    if top:
+        labels = ", ".join(f"{t.get('class')} ({t.get('conf')})" for t in top[:3])
+        disease_line = f"Scan on {house} highlights: {labels}."
+    elif evidence.get("class_counts"):
+        disease_line = f"Scan on {house} reports: {evidence.get('class_counts')}."
+    else:
+        disease_line = f"Scan on {house} found no lesions above threshold."
+
+    plan_title = evidence.get("plan_title") or "hold current climate setpoints"
+    risk = evidence.get("plan_risk") or "low"
+    climate_bits = []
+    for snip in evidence.get("knowledge") or []:
+        if snip.get("climate_focus"):
+            climate_bits.append(str(snip["climate_focus"]))
+        for tip in snip.get("management") or []:
+            climate_bits.append(str(tip))
+    climate_line = " ".join(climate_bits[:3]) if climate_bits else "Keep canopy inspectable and avoid unnecessary wetting."
+
+    linked = []
+    for hp in evidence.get("house_plans") or []:
+        role = hp.get("role") or "house"
+        hid = hp.get("house_id")
+        if hp.get("quarantine"):
+            linked.append(f"{hid} ({role}, quarantine)")
+        else:
+            linked.append(f"{hid} ({role})")
+    link_line = (
+        "Linked houses: " + ", ".join(linked) + "."
+        if linked
+        else "No neighbour spillover actions in the current plan."
+    )
+
+    caution = (
+        "This is assisted screening from detector evidence and a fixed knowledge base, "
+        "not a laboratory diagnosis. Confirm before changing commercial climate computers."
+    )
+    return (
+        f"{disease_line} Proposed plan ({risk}): {plan_title}. "
+        f"{climate_line} {link_line} {caution}"
+    )
+
+
 @app.post("/api/explain")
 def explain(req: ExplainRequest) -> dict[str, Any]:
-    if not client:
-        raise HTTPException(
-            status_code=500,
-            detail="OPENCLAW_API_KEY not configured. Set it in .env or environment.",
-        )
     if _LAST is None:
         raise HTTPException(status_code=400, detail="Run detection first")
 
@@ -317,41 +358,62 @@ def explain(req: ExplainRequest) -> dict[str, Any]:
         "house_plans": house_plans,
         "knowledge": kb,
     }
-    model = (req.model or DEFAULT_MODEL).strip()
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": "Write the advisory from this JSON:\n"
-            + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")),
-        },
-    ]
 
-    t0 = time.time()
-    try:
-        resp = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.2,
-            max_tokens=220,
-        )
-        text = (resp.choices[0].message.content or "").strip()
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"LLM call failed: {exc}") from exc
-    latency_ms = int((time.time() - t0) * 1000)
+    model = (req.model or DEFAULT_MODEL).strip()
+    source = "rule_fallback"
+    text = ""
+    latency_ms = 0
+    llm_error = None
+
+    if client:
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": "Write the advisory from this JSON:\n"
+                + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")),
+            },
+        ]
+        t0 = time.time()
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.2,
+                max_tokens=220,
+            )
+            text = (resp.choices[0].message.content or "").strip()
+            if text:
+                source = "llm"
+            latency_ms = int((time.time() - t0) * 1000)
+        except Exception as exc:  # noqa: BLE001
+            llm_error = str(exc)
+            latency_ms = int((time.time() - t0) * 1000)
+
+    if source != "llm":
+        text = _rule_advisory(evidence)
+        if llm_error and "Insufficient account balance" in llm_error:
+            text += " [Note: LLM skipped — OpenClaw account balance insufficient; rule-based advisory used.]"
+        elif llm_error:
+            text += " [Note: LLM unavailable; rule-based advisory used.]"
+        elif not client:
+            text += " [Note: no LLM key configured; rule-based advisory used.]"
 
     record = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "model": model,
+        "model": model if source == "llm" else "rule_fallback",
+        "source": source,
         "latency_ms": latency_ms,
         "evidence": evidence,
         "explanation": text,
+        "llm_error": llm_error,
     }
     log_path = LOGS / f"explain_{int(time.time())}.json"
     log_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return {
-        "model": model,
+        "model": record["model"],
+        "source": source,
         "latency_ms": latency_ms,
         "explanation": text,
         "evidence": evidence,
