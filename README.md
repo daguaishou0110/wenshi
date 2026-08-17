@@ -36,26 +36,24 @@ python app.py
 
 浏览器打开 http://127.0.0.1:8899
 
-## Deploy on Render
+## Deploy on Render（推荐：Python 3.11，不要用 Docker）
 
-仓库已改为 **Docker** 部署（`Dockerfile` + `render.yaml`），避免 Render 默认 Python 3.13 与 `onnxruntime` 不兼容导致 Build 失败。
-
-### A. Blueprint（推荐）
-
-1. [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**
-2. 连接 `daguaishou0110/wenshi`，确认使用最新 `main`
-3. 创建 `canopy-disease`；可选填 `OPENCLAW_API_KEY`
-4. 访问 `https://<service-name>.onrender.com`
-
-若已有失败服务：打开该服务 → **Settings** → Runtime 改为 **Docker**，或删掉后用 Blueprint 重建。Manual 时 Start/Build 由 Dockerfile 接管。
-
-### B. 手动 Docker Web Service
+Docker 免费实例在本项目上容易卡在 Application loading。请用 **Python** 运行时：
 
 | 项 | 值 |
 |----|----|
-| Runtime | Docker |
-| Dockerfile Path | `./Dockerfile` |
-| Health Check Path | `/api/config` |
+| Runtime | **Python 3**（不要选 Docker） |
+| Branch | `main` |
+| Build Command | `pip install --upgrade pip && pip install -r requirements.txt` |
+| Start Command | `python entrypoint.py` |
+| Health Check Path | `/healthz` |
+| Env `PYTHON_VERSION` | `3.11.9`（必填，避免默认 3.13） |
+
+可选：`OPENCLAW_API_KEY`
+
+若已有 Docker 服务：Settings → 改成上述 Python 配置，或删掉重建为 Python Web Service。
+
+说明：免费实例闲置会休眠，首次打开可能要等 30–60 秒。
 
 ## 与章节素材对应
 

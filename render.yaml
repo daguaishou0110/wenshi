@@ -1,13 +1,15 @@
 services:
   - type: web
-    name: canopy-disease
-    runtime: docker
+    name: wenshi
+    runtime: python
     plan: free
     region: singapore
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python entrypoint.py
     healthCheckPath: /healthz
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: YOLO_CONF
         value: "0.25"
       - key: EXPLAIN_CONF_THRESHOLD

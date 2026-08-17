@@ -8,18 +8,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     OMP_NUM_THREADS=1 \
     ORT_INTRA_THREADS=1 \
     ORT_INTER_THREADS=1 \
-    WEB_CONCURRENCY=1
+    WEB_CONCURRENCY=1 \
+    PORT=10000
 
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY app.py greenhouse.py detector.py ./
+COPY entrypoint.py app.py greenhouse.py detector.py ./
 COPY knowledge ./knowledge
 COPY static ./static
-COPY weights ./weights
+COPY weights/best.onnx ./weights/best.onnx
 RUN mkdir -p logs static/uploads \
     && test -f weights/best.onnx \
-    && python -c "import fastapi,uvicorn,numpy,PIL; print('imports-ok')"
+    && python -c "import app; print('app-import-ok', app.app.title)"
 
-# Shell form so $PORT expands; avoid start.sh CRLF issues on Windows commits
-CMD python -m uvicorn app:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1 --log-level info
+EXPOSE 10000
+# Exec form: Render injects PORT; entrypoint reads it in Python
+CMD ["python", "entrypoint.py"]
