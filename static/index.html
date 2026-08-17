@@ -1135,7 +1135,7 @@
         const res = await fetch("/api/explain", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         clearInterval(explainTimer);
         advice.className = "advice";
         if (res.ok) {
@@ -1143,14 +1143,15 @@
           const src = data.source === "llm" ? "LLM" : "规则兜底";
           advice.innerHTML = `${data.explanation || ""}<div class="latency">${src} · latency_ms: ${lat}</div>`;
         } else {
-          advice.textContent = data.detail || "失败";
+          advice.textContent = data.detail || ("建议失败 HTTP " + res.status);
         }
       } catch (err) {
         clearInterval(explainTimer);
         advice.className = "advice";
-        advice.textContent = "建议请求失败";
+        advice.textContent = "建议请求失败（网络/休眠唤醒超时）。请再点一次。 " + (err && err.message ? err.message : "");
       }
-      $("btnExplain").disabled = !apiReady;
+      // Always allow retry after a scan; do not tie the button to LLM-only readiness.
+      $("btnExplain").disabled = false;
     };
 
     $("btnReset").onclick = async () => {
