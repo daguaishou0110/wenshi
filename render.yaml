@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: canopy-disease
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/config
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: YOLO_CONF
+        value: "0.25"
+      - key: EXPLAIN_CONF_THRESHOLD
+        value: "0.55"
+      - key: OPENCLAW_BASE_URL
+        value: "https://openclaw-api.com/v1"
+      - key: OPENCLAW_MODEL
+        value: "gpt-5.4-mini"
+      - key: OPENCLAW_API_KEY
+        sync: false
