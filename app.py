@@ -35,7 +35,7 @@ load_dotenv(ROOT / ".env")
 
 BASE_URL = os.getenv("OPENCLAW_BASE_URL", "https://openclaw-api.com/v1")
 API_KEY = os.getenv("OPENCLAW_API_KEY", "")
-DEFAULT_MODEL = os.getenv("OPENCLAW_MODEL", "gpt-5.4-mini")
+DEFAULT_MODEL = os.getenv("OPENCLAW_MODEL", "claude-haiku-4-5-20251001")
 CONF_THRESHOLD = float(os.getenv("EXPLAIN_CONF_THRESHOLD", "0.55"))
 DETECT_CONF = float(os.getenv("YOLO_CONF", "0.25"))
 DEFAULT_WEIGHTS = ROOT / "weights" / "best.onnx"
