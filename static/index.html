@@ -668,14 +668,14 @@
         <div class="mark">CF</div>
         <div>
           <h1>Canopy Disease Farm</h1>
-          <p>温室群监测 · 叶病检测驱动气候辅助</p>
+          <p>Multi-house monitoring · leaf-disease driven climate assist</p>
         </div>
       </div>
       <div class="status">
-        <span class="chip" id="activeChip">当前棚 —</span>
-        <span class="chip" id="riskChip">农场风险 —</span>
-        <span class="chip" id="yoloChip">检测…</span>
-        <span class="chip" id="apiChip">建议…</span>
+        <span class="chip" id="activeChip">Active house —</span>
+        <span class="chip" id="riskChip">Farm risk —</span>
+        <span class="chip" id="yoloChip">Detector…</span>
+        <span class="chip" id="apiChip">Advice…</span>
       </div>
     </header>
 
@@ -683,24 +683,24 @@
       <aside class="side bracket">
         <span class="br-tr"></span><span class="br-bl"></span>
         <div class="side-h">
-          <h2>叶面采集</h2>
-          <p>先点场景中的大棚，再扫描</p>
+          <h2>Leaf capture</h2>
+          <p>Select a greenhouse, then scan a leaf image</p>
         </div>
         <div class="side-b">
           <div class="detect-pane">
-            <div id="thumb" class="ph">检测预览</div>
+            <div id="thumb" class="ph">Detection preview</div>
             <div class="detect-meta">
-              棚 <b id="mHouse">—</b><br />
-              目标 <b id="mCount">—</b> · <b id="mLat">—</b><br />
-              <b id="mClasses">等待扫描</b>
+              House <b id="mHouse">—</b><br />
+              Objects <b id="mCount">—</b> · <b id="mLat">—</b><br />
+              <b id="mClasses">Waiting for scan</b>
             </div>
           </div>
           <div id="samples"></div>
-          <label class="upload">上传叶面图像<input id="file" type="file" accept="image/*" hidden /></label>
+          <label class="upload">Upload leaf image<input id="file" type="file" accept="image/*" hidden /></label>
           <div class="row">
-            <button class="btn primary" id="btnDetect" disabled>扫描当前棚</button>
-            <button class="btn ghost" id="btnTick">气候微变</button>
-            <button class="btn ghost" id="btnReset">重置孪生</button>
+            <button class="btn primary" id="btnDetect" disabled>Scan active house</button>
+            <button class="btn ghost" id="btnTick">Climate tick</button>
+            <button class="btn ghost" id="btnReset">Reset farm</button>
           </div>
         </div>
       </aside>
@@ -717,10 +717,10 @@
         <div class="overlay-ui">
           <div class="legend-card">
             <strong>SCENE LEGEND</strong>
-            <div><span class="dot g"></span>正常运行</div>
-            <div><span class="dot o"></span>偏高风险</div>
-            <div><span class="dot r"></span>危急 / 隔离</div>
-            <div><span class="dot c"></span>管道脉冲 = 邻棚联动</div>
+            <div><span class="dot g"></span>Normal</div>
+            <div><span class="dot o"></span>Elevated risk</div>
+            <div><span class="dot r"></span>Critical / quarantine</div>
+            <div><span class="dot c"></span>Conduit pulse = neighbour link</div>
           </div>
           <div class="toast" id="toast"></div>
         </div>
@@ -729,21 +729,21 @@
       <aside class="rail bracket">
         <span class="br-tr"></span><span class="br-bl"></span>
         <div class="rail-h">
-          <h2>联动环控台</h2>
-          <p>主棚执行 · 邻棚屏障 · soft-PLC</p>
+          <h2>Linked climate console</h2>
+          <p>Primary house · neighbour barrier · soft-PLC</p>
         </div>
         <div class="rail-b">
           <div class="plan" id="planBox">
-            <h3 id="planTitle">等待叶面扫描</h3>
-            <p class="hint" id="planHint">扫描后，主棚与邻棚会在场景中点亮联动。</p>
+            <h3 id="planTitle">Waiting for leaf scan</h3>
+            <p class="hint" id="planHint">After a scan, primary and neighbour houses light up in the scene.</p>
             <div id="housePlans"></div>
             <ul id="planNotes" style="margin:8px 0 0;padding-left:16px;color:#7a9aa0;font-size:0.7rem"></ul>
           </div>
           <div class="row">
-            <button class="btn warn" id="btnApply" disabled>应用联动计划</button>
-            <button class="btn primary" id="btnExplain" disabled>生成农事建议</button>
+            <button class="btn warn" id="btnApply" disabled>Apply linked plan</button>
+            <button class="btn primary" id="btnExplain" disabled>Generate farm advice</button>
           </div>
-          <div class="advice" id="advice"><span class="hint">建议将结合主棚检测与邻棚联动状态。</span></div>
+          <div class="advice" id="advice"><span class="hint">Advice will combine primary-house detections with neighbour linkage.</span></div>
           <div class="audit" id="audit"></div>
         </div>
       </aside>
@@ -783,7 +783,7 @@
         const ph = document.createElement("div");
         ph.id = "thumb";
         ph.className = "ph";
-        ph.textContent = "检测预览";
+        ph.textContent = "Detection preview";
         old.replaceWith(ph);
       }
     }
@@ -900,9 +900,9 @@
     function renderFarm(f, opts = {}) {
       farm = f;
       activeHouse = f.active_house_id;
-      $("activeChip").textContent = "当前棚 " + activeHouse;
+      $("activeChip").textContent = "Active house " + activeHouse;
       const risk = f.farm_risk || "low";
-      $("riskChip").textContent = "农场风险 " + risk;
+      $("riskChip").textContent = "Farm risk " + risk;
       $("riskChip").className = "chip" + (risk === "critical" ? " crit" : risk === "high" || risk === "medium" ? " warn" : " ok");
 
       const linked = new Set((opts.linkedHouses || f.last_linked_plan?.house_plans || []).map((h) => h.house_id || h));
@@ -959,7 +959,7 @@
           const data = await res.json();
           if (res.ok) {
             renderFarm(data.farm, { linkedHouses: [...linked] });
-            toast("已切换到 " + h.house_id + " · " + shortName(h.name));
+            toast("Switched to " + h.house_id + " · " + shortName(h.name));
           }
         };
         root.appendChild(btn);
@@ -967,16 +967,16 @@
 
       $("audit").innerHTML = (f.audit || []).slice(0, 5).map((a) =>
         `<div>${a.plan_id || a.id} · ${(a.applied || []).map((x) => x.house_id).join(" → ") || "—"}</div>`
-      ).join("") || "暂无执行记录";
+      ).join("") || "No apply log yet";
     }
 
     function renderPlan(plan) {
       const box = $("planBox");
       box.className = "plan " + (plan?.risk || "");
-      $("planTitle").textContent = plan?.title || "无计划";
+      $("planTitle").textContent = plan?.title || "No plan";
       $("planHint").textContent = plan?.requires_confirm
-        ? `风险 ${plan.risk} · 主棚 ${plan.primary_house_id} · 场景联动已点亮`
-        : "无需多棚改动";
+        ? `Risk ${plan.risk} · primary ${plan.primary_house_id} · scene links highlighted`
+        : "No multi-house changes needed";
       lastPlanId = plan?.plan_id || null;
       $("btnApply").disabled = !(plan?.house_plans || []).some((hp) => (hp.actions || []).length || hp.quarantine);
       const root = $("housePlans");
@@ -985,10 +985,10 @@
         const div = document.createElement("div");
         div.className = "hp " + (hp.role || "");
         div.innerHTML = `
-          <span class="tag ${hp.role}">${hp.role === "primary" ? "主棚" : "邻棚"}</span>
+          <span class="tag ${hp.role}">${hp.role === "primary" ? "Primary" : "Neighbour"}</span>
           <div style="font-weight:700;font-size:0.8rem;color:#1f2e22">${hp.house_id} · ${shortName(hp.name)}</div>
-          <div class="hint">${hp.title || ""}${hp.quarantine ? " · 隔离" : ""}</div>
-          ${(hp.actions || []).map((a) => `<div class="act"><span>${a.label}</span><b>${a.from} → ${a.to}${a.unit === "bool" || a.unit === "mode" ? "" : a.unit}</b></div>`).join("") || `<div class="hint" style="margin-top:4px">维持设定</div>`}`;
+          <div class="hint">${hp.title || ""}${hp.quarantine ? " · quarantine" : ""}</div>
+          ${(hp.actions || []).map((a) => `<div class="act"><span>${a.label}</span><b>${a.from} → ${a.to}${a.unit === "bool" || a.unit === "mode" ? "" : a.unit}</b></div>`).join("") || `<div class="hint" style="margin-top:4px">Hold setpoints</div>`}`;
         root.appendChild(div);
       });
       $("planNotes").innerHTML = (plan?.notes || []).map((n) => `<li>${n}</li>`).join("");
@@ -1015,9 +1015,9 @@
       if (!res.ok) throw new Error("config " + res.status);
       const cfg = await res.json();
       apiReady = !!cfg.api_ready;
-      $("yoloChip").textContent = cfg.yolo_ready ? "检测就绪" : "缺权重";
+      $("yoloChip").textContent = cfg.yolo_ready ? "Detector ready" : "Weights missing";
       $("yoloChip").className = "chip " + (cfg.yolo_ready ? "ok" : "crit");
-      $("apiChip").textContent = apiReady ? "LLM建议就绪" : "规则建议就绪";
+      $("apiChip").textContent = apiReady ? "LLM advice ready" : "Rule advice ready";
       $("apiChip").className = "chip " + (apiReady ? "ok" : "warn");
       // Advice always available after a scan (LLM or rule fallback).
       $("btnExplain").disabled = true;
@@ -1069,7 +1069,7 @@
     async function runDetect() {
       if (!selected) return;
       $("btnDetect").disabled = true;
-      toast("正在扫描 " + activeHouse + " …");
+      toast("Scanning " + activeHouse + " …");
       const fd = new FormData();
       fd.append("house_id", activeHouse);
       if (selected.type === "sample") fd.append("sample_file", selected.file);
@@ -1078,7 +1078,7 @@
       $("btnDetect").disabled = false;
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        $("advice").textContent = err.detail || "检测失败";
+        $("advice").textContent = err.detail || "Detection failed";
         return;
       }
       const data = await res.json();
@@ -1091,21 +1091,21 @@
       if (data.farm) farm = data.farm;
       renderPlan(data.control_plan);
       $("btnExplain").disabled = false;
-      toast(`扫描完成 · 联动 ${(data.control_plan?.house_plans || []).length} 棚`);
-      $("advice").innerHTML = `<span class="hint">联动计划已生成。可点击农事建议（LLM 不可用时自动用规则建议）。</span>`;
+      toast(`Scan complete · linked ${(data.control_plan?.house_plans || []).length} house(s)`);
+      $("advice").innerHTML = `<span class="hint">Linked plan ready. Click Generate farm advice (rule fallback if LLM is unavailable).</span>`;
     }
 
     $("btnDetect").onclick = runDetect;
 
     $("btnApply").onclick = async () => {
-      toast("下发多棚 soft-PLC …");
+      toast("Applying multi-house soft-PLC …");
       const res = await fetch("/api/control/apply", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan_id: lastPlanId, operator: "demo" }),
       });
       const data = await res.json();
       if (!res.ok) {
-        $("advice").textContent = data.detail || "应用失败";
+        $("advice").textContent = data.detail || "Apply failed";
         return;
       }
       const applied = data.audit?.applied || [];
@@ -1116,8 +1116,8 @@
         applyFx(deltas);
       }
       $("btnApply").disabled = true;
-      toast("联动已应用 · 观察场景变化");
-      $("advice").textContent = "联动气候计划已下发。场景中的湿度雾气、风机转速与天窗开口会随之变化。";
+      toast("Linked plan applied · watch the scene");
+      $("advice").textContent = "Linked climate plan applied. Humidity mist, fans, and vents will update in the scene.";
     };
 
     $("btnExplain").onclick = async () => {
@@ -1129,7 +1129,7 @@
       clearInterval(explainTimer);
       explainTimer = setInterval(() => {
         const el = $("explainElapsed");
-        if (el) el.textContent = "已等待 " + Math.floor((Date.now() - t0) / 1000) + "s";
+        if (el) el.textContent = "Elapsed " + Math.floor((Date.now() - t0) / 1000) + "s";
       }, 250);
       try {
         const res = await fetch("/api/explain", {
@@ -1140,15 +1140,24 @@
         advice.className = "advice";
         if (res.ok) {
           const lat = data.latency_ms != null ? data.latency_ms : (Date.now() - t0);
-          const src = data.source === "llm" ? "LLM" : "规则兜底";
-          advice.innerHTML = `${data.explanation || ""}<div class="latency">${src} · latency_ms: ${lat}</div>`;
+          const src = data.source === "llm" ? "LLM" : "Rule fallback";
+          const plain = String(data.explanation || "").replace(/\*\*/g, "");
+          advice.innerHTML = "";
+          const pre = document.createElement("div");
+          pre.style.whiteSpace = "pre-wrap";
+          pre.textContent = plain;
+          advice.appendChild(pre);
+          const meta = document.createElement("div");
+          meta.className = "latency";
+          meta.textContent = src + " · latency_ms: " + lat;
+          advice.appendChild(meta);
         } else {
-          advice.textContent = data.detail || ("建议失败 HTTP " + res.status);
+          advice.textContent = data.detail || ("Advice failed HTTP " + res.status);
         }
       } catch (err) {
         clearInterval(explainTimer);
         advice.className = "advice";
-        advice.textContent = "建议请求失败（网络/休眠唤醒超时）。请再点一次。 " + (err && err.message ? err.message : "");
+        advice.textContent = "Advice request failed (network or cold-start timeout). Please try again. " + (err && err.message ? err.message : "");
       }
       // Always allow retry after a scan; do not tie the button to LLM-only readiness.
       $("btnExplain").disabled = false;
@@ -1160,10 +1169,10 @@
       const data = await fetch("/api/farm/reset", { method: "POST" }).then((r) => r.json());
       renderFarm(data.farm);
       renderPlan(null);
-      $("planTitle").textContent = "孪生已重置";
+      $("planTitle").textContent = "Farm reset";
       $("housePlans").innerHTML = "";
       $("btnApply").disabled = true;
-      toast("农场状态已重置");
+      toast("Farm state reset");
     };
 
     $("btnTick").onclick = async () => {

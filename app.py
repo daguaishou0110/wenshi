@@ -49,10 +49,31 @@ with (KNOWLEDGE / "disease_kb.json").open(encoding="utf-8") as f:
 _LAST: dict[str, Any] | None = None
 
 SYSTEM_PROMPT = """Greenhouse multi-house advisory assistant. Use only the JSON facts given.
-Style: clear English for technicians; 80-120 words; no model/API/thesis jargon.
+Write clear English for technicians; about 80-120 words; no model/API/thesis jargon.
 Cover: scanned house + disease; primary climate actions; neighbour linkage if any; one caution line.
-End: assisted screening, not lab diagnosis.
+End with: assisted screening, not lab diagnosis.
+CRITICAL formatting rules:
+- Plain text only.
+- Do NOT use markdown of any kind: no **, *, #, ###, backticks, or --- lines.
+- Do NOT bold or italicize words.
+- Use simple section labels ending with a colon, then normal sentences.
 """
+
+
+def _plain_advisory(text: str) -> str:
+    """Strip markdown markers that models often insert despite instructions."""
+    import re
+
+    s = (text or "").strip()
+    s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
+    s = re.sub(r"__([^_]+)__", r"\1", s)
+    s = re.sub(r"(?<!\w)\*([^*\n]+)\*(?!\w)", r"\1", s)
+    s = re.sub(r"`([^`]+)`", r"\1", s)
+    s = re.sub(r"^#{1,6}\s*", "", s, flags=re.MULTILINE)
+    s = re.sub(r"^\s*[-*]\s+", "", s, flags=re.MULTILINE)
+    s = re.sub(r"^\s*---\s*$", "", s, flags=re.MULTILINE)
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    return s.strip()
 
 
 class ExplainRequest(BaseModel):
@@ -382,7 +403,7 @@ def explain(req: ExplainRequest) -> dict[str, Any]:
                 temperature=0.2,
                 max_tokens=220,
             )
-            text = (resp.choices[0].message.content or "").strip()
+            text = _plain_advisory(resp.choices[0].message.content or "")
             if text:
                 source = "llm"
             latency_ms = int((time.time() - t0) * 1000)
@@ -391,13 +412,15 @@ def explain(req: ExplainRequest) -> dict[str, Any]:
             latency_ms = int((time.time() - t0) * 1000)
 
     if source != "llm":
-        text = _rule_advisory(evidence)
+        text = _plain_advisory(_rule_advisory(evidence))
         if llm_error and "Insufficient account balance" in llm_error:
-            text += " [Note: LLM skipped — OpenClaw account balance insufficient; rule-based advisory used.]"
+            text += " Note: LLM skipped because the selected model channel reported insufficient balance; rule-based advisory used."
         elif llm_error:
-            text += " [Note: LLM unavailable; rule-based advisory used.]"
+            text += " Note: LLM unavailable; rule-based advisory used."
         elif not client:
-            text += " [Note: no LLM key configured; rule-based advisory used.]"
+            text += " Note: no LLM key configured; rule-based advisory used."
+    else:
+        text = _plain_advisory(text)
 
     record = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
