@@ -997,8 +997,23 @@
       }
     }
 
+    const FALLBACK_SAMPLES = [
+      { id: "leaf_bacterial_spot", file: "samples/leaf_bacterial_spot.jpg", name: "bacterial spot" },
+      { id: "leaf_early_blight", file: "samples/leaf_early_blight.jpg", name: "early blight" },
+      { id: "leaf_healthy", file: "samples/leaf_healthy.jpg", name: "healthy" },
+      { id: "leaf_late_blight", file: "samples/leaf_late_blight.jpg", name: "late blight" },
+      { id: "leaf_leaf_mold", file: "samples/leaf_leaf_mold.jpg", name: "mold" },
+      { id: "leaf_mosaic", file: "samples/leaf_mosaic.jpg", name: "mosaic" },
+      { id: "leaf_septoria", file: "samples/leaf_septoria.jpg", name: "septoria" },
+      { id: "leaf_spider_mites", file: "samples/leaf_spider_mites.jpg", name: "spider mites" },
+      { id: "leaf_target_spot", file: "samples/leaf_target_spot.jpg", name: "target spot" },
+      { id: "leaf_ylcv", file: "samples/leaf_ylcv.jpg", name: "ylcv" },
+    ];
+
     async function loadConfig() {
-      const cfg = await fetch("/api/config").then((r) => r.json());
+      const res = await fetch("/api/config");
+      if (!res.ok) throw new Error("config " + res.status);
+      const cfg = await res.json();
       apiReady = !!cfg.api_ready;
       $("yoloChip").textContent = cfg.yolo_ready ? "检测就绪" : "缺权重";
       $("yoloChip").className = "chip " + (cfg.yolo_ready ? "ok" : "crit");
@@ -1008,15 +1023,17 @@
     }
 
     async function loadFarm() {
-      renderFarm(await fetch("/api/farm").then((r) => r.json()));
+      const res = await fetch("/api/farm");
+      if (!res.ok) throw new Error("farm " + res.status);
+      renderFarm(await res.json());
     }
 
-    async function loadSamples() {
-      const list = await fetch("/api/samples").then((r) => r.json());
+    function paintSamples(list) {
       const root = $("samples");
       root.innerHTML = "";
-      list.forEach((s, i) => {
+      (list || []).forEach((s, i) => {
         const b = document.createElement("button");
+        b.type = "button";
         b.className = "sample" + (i === 0 ? " on" : "");
         b.innerHTML = `<strong>${s.name}</strong><span>${s.file}</span>`;
         b.onclick = () => {
@@ -1033,6 +1050,19 @@
           setThumb("/static/" + s.file);
         }
       });
+    }
+
+    async function loadSamples() {
+      try {
+        const res = await fetch("/api/samples");
+        if (!res.ok) throw new Error("samples " + res.status);
+        const list = await res.json();
+        if (!Array.isArray(list) || !list.length) throw new Error("empty samples");
+        paintSamples(list);
+      } catch (err) {
+        console.warn("samples api failed, using fallback", err);
+        paintSamples(FALLBACK_SAMPLES);
+      }
     }
 
     async function runDetect() {
